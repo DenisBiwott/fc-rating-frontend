@@ -4,6 +4,7 @@
 // fc-rating-backend's recentForm) — padding on the left with "not yet played" slots to always
 // show exactly 5 is this component's job, not the API's.
 import { computed } from 'vue'
+import ResultChip from './ResultChip.vue'
 
 type MatchResult = 'W' | 'L' | 'D'
 
@@ -13,23 +14,18 @@ const slots = computed<Array<MatchResult | null>>(() => {
   const padding = Math.max(0, 5 - props.form.length)
   return [...(Array.from({ length: padding }, () => null) as null[]), ...props.form.slice(-5)]
 })
-
-const chipClasses: Record<MatchResult, string> = {
-  W: 'bg-[rgba(52,211,153,0.16)] text-accent-up-bright',
-  L: 'bg-[rgba(244,113,89,0.16)] text-accent-down',
-  D: 'bg-[rgba(161,161,170,0.16)] text-text-secondary',
-}
 </script>
 
 <template>
   <div class="flex flex-none items-center gap-1">
-    <span
-      v-for="(slot, i) in slots"
-      :key="i"
-      class="flex h-3.5 w-3.5 flex-none items-center justify-center rounded font-mono text-[9px] font-bold"
-      :class="slot ? chipClasses[slot] : 'bg-bg-control text-[#3f3f46]'"
-    >
-      {{ slot ?? '·' }}
-    </span>
+    <template v-for="(slot, i) in slots" :key="i">
+      <ResultChip v-if="slot" :result="slot" :size="14" :font-size="9" />
+      <span
+        v-else
+        class="flex h-3.5 w-3.5 flex-none items-center justify-center rounded bg-bg-control font-mono text-[9px] font-bold text-[#3f3f46]"
+      >
+        ·
+      </span>
+    </template>
   </div>
 </template>
