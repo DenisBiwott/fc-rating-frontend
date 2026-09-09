@@ -28,6 +28,11 @@ export default tseslint.config(
     },
     rules: {
       'vue/multi-word-component-names': 'off',
+      // Props are declared via defineProps<{...}>() (type-only, per CLAUDE.md's non-negotiable),
+      // where TypeScript's `?:` already documents optionality — an optional prop that's
+      // genuinely meant to stay undefined (e.g. AvatarTile's `medal`) isn't a missing default,
+      // it's the point.
+      'vue/require-default-prop': 'off',
     },
   },
   eslintConfigPrettier,
