@@ -12,25 +12,24 @@ competitive leaderboard, for a friend group. Vite + TypeScript strict + Tailwind
 TanStack Query. The record-match flow is the product: it must complete in under 10 seconds,
 one-handed, on a phone. Everything else is secondary.
 
-**Status:** build-order Phases 0-2 done. Phase 0: Vite + Vue 3 + TypeScript strict, Tailwind v4
-with design-spec.md's tokens, shadcn-vue config, ESLint + Prettier, Vitest, and the OpenAPI
-contract sync (`scripts/sync-contract.ts`) already run for real against `fc-rating-backend`'s
-committed `openapi.json`, not a hand-stubbed contract. Phase 1: Vue Router with an auth guard
-(redirects to `/login` on a null current-user query, preserving `?redirect=`), the bottom-nav app
-shell (`BottomNav.vue` — text tabs, no icons, per design-spec.md), a dark/light theme composable
-(dark by default, `prefers-color-scheme` on first load, persisted to `localStorage`), a real login
-screen, and stub screens for every remaining MVP route. Phase 2: the real leaderboard (1a compact
-ledger) — `RatingNumber`/`DeltaBadge`/`FormStrip`/`AvatarTile` shared components, `PlayerRow`,
-`LiveSessionBanner`, and `useLeaderboard` (the client-side composition placeholder from the
-contract gap below, now real code, isolated in one query hook). MSW backs it with design-spec.md's
-own 8-player mock table as a deterministic seed. `pnpm lint && pnpm typecheck && pnpm test && pnpm
-build` all pass; every seeded row (medals, PROV/UNRATED badges, form strips, deltas, the corrected
-"biggest mover") verified pixel-for-pixel against design-spec.md's table in both palettes against a
-running dev server. Post-Phase-2 shell fixes: a real bug where dark mode silently never applied
-unless a user happened to visit Admin (see Scars), the bottom nav now pinned to the viewport
-instead of scrolling away on a tall page, and a desktop "phone card" containment above the `sm`
-breakpoint (see docs/ARCHITECTURE.md#responsive-shell) — none of this needed any change below
-`App.vue`. **Next: Phase 3 (record-match — the product).** Build order lives in
+**Status:** build-order Phases 0-3 done. Phase 0: tooling scaffold (Vite + Vue 3 + TS strict,
+Tailwind v4, ESLint+Prettier, Vitest), OpenAPI contract sync run for real against
+`fc-rating-backend`'s committed `openapi.json`. Phase 1: auth (Vue Router guard, login, theme
+composable), the `BottomNav`/`App.vue` shell. Phase 2: the real leaderboard (1a compact ledger),
+`useLeaderboard`'s composition placeholder (see "Known contract gap" below) now real code. Both
+followed by real shell/theme bug fixes (see Scars) and a desktop "phone card" containment above the
+`sm` breakpoint (docs/ARCHITECTURE.md#responsive-shell). **Phase 3 (record-match — the product):**
+`useRecordMatchForm`'s state machine (`selecting → scoring → submitting → result → done`,
+docs/ARCHITECTURE.md), the full screen (`MatchSlot`/`PlayerGrid`/`ScoreStepper`/`PreviewLine`/
+`ResultOverlay`), idempotent submission with a client-generated UUID v7, and an optimistic
+leaderboard cache update on success (`useLeaderboard`'s new `applyRecordedMatchOptimistically`).
+The mock backend is now real and stateful (`src/mocks/seed/mock-db.ts` + an Elo engine mirroring
+the backend's algorithm exactly) — recording a match against MSW actually updates ratings, so the
+full loop is verifiable end to end. Found two real bugs along the way (see Scars): `apiClient`
+silently bypassed MSW entirely due to a `fetch`-capture-at-creation issue, and `DeltaBadge` wasn't
+rounding, leaking raw Elo deltas into the UI. `pnpm lint && pnpm typecheck && pnpm test && pnpm
+build` all pass; the full record → result → leaderboard-updates loop verified against a running dev
+server. **Next: Phase 4 (player profile).** Build order lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
 lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
 (one directory up, outside this repo — planning documents, not committed here). This repo's docs
@@ -94,6 +93,16 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   `src/queries/useCurrentUser.ts`'s `useLogin`). The real fix is the backend documenting its error
   responses; this is a workaround for a contract that undersells runtime behavior, not a
   frontend-side design choice worth keeping once that's added.
+- **`apiClient` (`src/api/client.ts`) must pass an explicit `fetch` wrapper, never rely on
+  `openapi-fetch`'s default.** `createClient()`'s `fetch` parameter defaults to `globalThis.fetch`
+  — a *default parameter value resolved once, at the moment `createClient()` is called*, not looked
+  up fresh per request. `apiClient` is a module-level singleton created at import time, so removing
+  the wrapper (`fetch: (...args) => globalThis.fetch(...args)`) would make it permanently capture
+  whatever `fetch` existed the instant that module first loaded. Anything that patches `fetch`
+  *after* that — MSW's browser Service Worker, MSW's Node interceptor in tests, any future
+  monkey-patch — gets silently bypassed; every request falls through to a real network call instead
+  of being intercepted. Found via `useRecordMatchForm.spec.ts`'s "fetch failed" / DNS-lookup
+  failures against a deliberately-unreachable test host.
 
 ## Scope boundaries
 
