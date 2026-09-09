@@ -35,12 +35,19 @@ are the two screens that matter on a phone at the table.
 Neither design doc says anything about a viewport wider than design-spec.md's 390×844 target —
 every fixed column width and component size in that spec is a phone-viewport number. Rather than
 design a second, desktop-native visual language with no spec to follow, `App.vue` contains the
-unmodified mobile layout in a fixed-width (390px) "phone card" above the `sm` (640px) breakpoint:
-rounded corners (`34px`, design-spec.md's own `phone frame` radius token — the only hint either
-doc gives about a wider viewport), a subtle border, floating on a `bg-nav`-toned backdrop (reusing
-an existing token rather than inventing a new one). Below `sm`, the card *is* the viewport —
+unmodified mobile layout in a fixed-width "phone card" above the `sm` (640px) breakpoint: rounded
+corners (`34px`, design-spec.md's own `phone frame` radius token — the only hint either doc gives
+about a wider viewport), a subtle border, floating on a `bg-nav`-toned backdrop (reusing an
+existing token rather than inventing a new one). Below `sm`, the card *is* the viewport —
 edge-to-edge, unchanged from a plain mobile page. No component below `App.vue` needs to know this
 exists.
+
+The card's width (540px, wider than design-spec.md's literal 390px target) is a judgment call, not
+a spec value — 390px read as "a mobile app running in a browser" rather than something at home on
+a laptop, but going much past ~540px opens a visible gap between a row's record text and its
+rating column, since the name column absorbs the extra width with nothing more to put in it. If
+that gap ever needs to go away at a wider card, the real fix is scaling row content (avatar size,
+font sizes, padding) to use the space, not just picking a bigger number.
 
 `BottomNav` is absolutely positioned (`bottom-0`) within that same card, which is `position:
 relative` — not `position: fixed` against the real viewport, which would escape the card's
