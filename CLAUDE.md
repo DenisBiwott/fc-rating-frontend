@@ -33,7 +33,20 @@ server (MSW). Since then, verified for real against the live backend (not MSW) i
 browser: login/cookie auth, leaderboard, record-match, and the live-session banner all work
 correctly against real Postgres data. The only blocker was the backend having no CORS
 configuration — fixed there, not worked around here (see `fc-rating-backend`'s CLAUDE.md); no
-frontend code changes were needed. **Next: Phase 4 (player profile).** Build order lives in
+frontend code changes were needed. **Phase 4 (player profile + players roster) is done.** Built
+from a Claude Design canvas Denis shared (`../FC Rating UI.dc.html`, not committed — same tier as
+the other planning docs) — only 2a/2b of its five screens; 2c (add-player), 2d (player actions), 2e
+(void-match preview) stay out of scope for now: two conflict with documented architecture (a
+per-player rating override; deleting a player, which contradicts this repo's own "never deleted,
+only deactivated" design) and one needs a new backend capability (a void-match dry-run), all
+deferred pending a deliberate decision rather than silently built around. New query hooks
+(`usePlayerProfile`/`useRatingHistory`/`useSessions`/`usePlayerMatches`/`usePlayersRoster` in
+`src/queries/`) compose the real contract, including `bestStreak`/`goalsFor`/`goalsAgainst`/
+`createdAt`/`lastPlayedAt` — added to the backend specifically for this phase (see
+`fc-rating-backend/CLAUDE.md`). `RatingSparkline` (hand-rolled SVG, no chart library) computes its
+own scaling rather than copying the source canvas's static points. Verified against the real dev
+server, not MSW — cross-checked against already-known values from this session's Elo investigation.
+**Next: Phase 5 (match history).** Build order lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
 lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
 (one directory up, outside this repo — planning documents, not committed here). This repo's docs
