@@ -26,7 +26,11 @@ contract gap below, now real code, isolated in one query hook). MSW backs it wit
 own 8-player mock table as a deterministic seed. `pnpm lint && pnpm typecheck && pnpm test && pnpm
 build` all pass; every seeded row (medals, PROV/UNRATED badges, form strips, deltas, the corrected
 "biggest mover") verified pixel-for-pixel against design-spec.md's table in both palettes against a
-running dev server. **Next: Phase 3 (record-match — the product).** Build order lives in
+running dev server. Post-Phase-2 shell fixes: a real bug where dark mode silently never applied
+unless a user happened to visit Admin (see Scars), the bottom nav now pinned to the viewport
+instead of scrolling away on a tall page, and a desktop "phone card" containment above the `sm`
+breakpoint (see docs/ARCHITECTURE.md#responsive-shell) — none of this needed any change below
+`App.vue`. **Next: Phase 3 (record-match — the product).** Build order lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
 lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
 (one directory up, outside this repo — planning documents, not committed here). This repo's docs
