@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-ssr
+coverage
+*.local
+
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+*.tsbuildinfo
+
+.env
+.env.local
+
+public/mockServiceWorker.js
