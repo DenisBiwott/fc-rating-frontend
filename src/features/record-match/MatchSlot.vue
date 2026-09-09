@@ -16,7 +16,7 @@ const emit = defineEmits<{ clear: [] }>()
 <template>
   <button
     type="button"
-    class="flex flex-1 flex-col items-center gap-2 rounded-2xl bg-bg-raised p-4 disabled:cursor-default"
+    class="flex min-h-41 flex-1 flex-col items-center gap-2 rounded-2xl bg-bg-raised p-4 disabled:cursor-default"
     :disabled="!name"
     :aria-label="name ? `Clear ${props.label.toLowerCase()} player ${name}` : `${props.label}, empty`"
     @click="emit('clear')"
