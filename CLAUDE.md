@@ -12,12 +12,18 @@ competitive leaderboard, for a friend group. Vite + TypeScript strict + Tailwind
 TanStack Query. The record-match flow is the product: it must complete in under 10 seconds,
 one-handed, on a phone. Everything else is secondary.
 
-**Status:** build-order Phase 0 (tooling scaffold) done — Vite + Vue 3 + TypeScript strict, Tailwind
-v4 with design-spec.md's tokens, shadcn-vue config, ESLint + Prettier, Vitest, and the OpenAPI
+**Status:** build-order Phases 0-1 done. Phase 0: Vite + Vue 3 + TypeScript strict, Tailwind v4
+with design-spec.md's tokens, shadcn-vue config, ESLint + Prettier, Vitest, and the OpenAPI
 contract sync (`scripts/sync-contract.ts`) already run for real against `fc-rating-backend`'s
-committed `openapi.json`, not a hand-stubbed contract. `pnpm lint && pnpm typecheck && pnpm test &&
-pnpm build` all pass. **Next: Phase 1 (app shell)** — bottom nav, dark/light toggle, router, login
-gate. Build order lives in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
+committed `openapi.json`, not a hand-stubbed contract. Phase 1: Vue Router with an auth guard
+(redirects to `/login` on a null current-user query, preserving `?redirect=`), the bottom-nav app
+shell (`BottomNav.vue` — text tabs, no icons, per design-spec.md), a dark/light theme composable
+(dark by default, `prefers-color-scheme` on first load, persisted to `localStorage`), a real login
+screen, and stub screens for every remaining MVP route. `pnpm lint && pnpm typecheck && pnpm test
+&& pnpm build` all pass; the login → leaderboard → nav → theme-toggle flow is verified against a
+running dev server in both palettes. **Next: Phase 2 (leaderboard)** — the client-side composition
+placeholder from the contract gaps below is real work starting here. Build order lives in
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
 lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
 (one directory up, outside this repo — planning documents, not committed here). This repo's docs
 distill the sections that govern it; if the two ever disagree, treat that as a bug in this repo's
