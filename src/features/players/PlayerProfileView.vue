@@ -3,7 +3,7 @@
 // useLeaderboard() row already fetched elsewhere in the app — leaderboard only includes active
 // players, so a deactivated player's profile simply omits the rank badge and delta line (still a
 // full historical record otherwise, per player-profile.ts's own comment on the backend).
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AvatarTile from '@/components/AvatarTile.vue'
 import DeltaBadge from '@/components/DeltaBadge.vue'
 import RatingNumber from '@/components/RatingNumber.vue'
@@ -11,11 +11,14 @@ import { useLeaderboard } from '@/queries/useLeaderboard'
 import { usePlayerMatches } from '@/queries/usePlayerMatches'
 import { usePlayerProfile } from '@/queries/usePlayerProfile'
 import { useRatingHistory } from '@/queries/useRatingHistory'
+import PlayerActionsSheet from './PlayerActionsSheet.vue'
 import ProfileMatchRow from './ProfileMatchRow.vue'
 import ProfileStatCard from './ProfileStatCard.vue'
 import RatingSparkline from './RatingSparkline.vue'
 
 const props = defineProps<{ id: string }>()
+
+const actionsOpen = ref(false)
 
 const { data: profile, isPending: profilePending } = usePlayerProfile(props.id)
 const { data: leaderboard } = useLeaderboard()
@@ -57,10 +60,9 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
         <span class="font-mono text-[11px] tracking-[0.1em] text-text-faint">PLAYER</span>
         <button
           type="button"
-          disabled
-          title="Coming soon"
           aria-label="Player actions"
-          class="flex h-8 w-8 items-center justify-center rounded-full border border-border-default bg-bg-raised text-sm text-text-secondary opacity-50"
+          class="flex h-8 w-8 items-center justify-center rounded-full border border-border-default bg-bg-raised text-sm text-text-secondary"
+          @click="actionsOpen = true"
         >
           ···
         </button>
@@ -142,4 +144,13 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
     <p v-else-if="profilePending" class="p-5 font-mono text-sm text-text-muted">Loading…</p>
     <p v-else class="p-5 font-mono text-sm text-text-muted">Player not found.</p>
   </section>
+
+  <PlayerActionsSheet
+    v-if="profile"
+    v-model:open="actionsOpen"
+    :player-id="id"
+    :name="profile.name"
+    :rank="leaderboardRow?.rank ?? null"
+    :games-played="profile.gamesPlayed"
+  />
 </template>

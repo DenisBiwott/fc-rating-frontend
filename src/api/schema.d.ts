@@ -101,7 +101,8 @@ export interface paths {
         get: operations["getPlayer"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete a player who has never played a match (requires admin role) */
+        delete: operations["deletePlayer"];
         options?: never;
         head?: never;
         /** Update a player (requires admin role) */
@@ -603,6 +604,26 @@ export interface operations {
                         isProvisional: boolean;
                     };
                 };
+            };
+        };
+    };
+    deletePlayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
