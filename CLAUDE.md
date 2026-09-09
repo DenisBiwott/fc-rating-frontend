@@ -12,12 +12,22 @@ competitive leaderboard, for a friend group. Vite + TypeScript strict + Tailwind
 TanStack Query. The record-match flow is the product: it must complete in under 10 seconds,
 one-handed, on a phone. Everything else is secondary.
 
-**Status:** pre-scaffold — no code yet. Build order lives in
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design lives in
-`../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md` (one
-directory up, outside this repo — planning documents, not committed here). This repo's docs
+**Status:** build-order Phase 0 (tooling scaffold) done — Vite + Vue 3 + TypeScript strict, Tailwind
+v4 with design-spec.md's tokens, shadcn-vue config, ESLint + Prettier, Vitest, and the OpenAPI
+contract sync (`scripts/sync-contract.ts`) already run for real against `fc-rating-backend`'s
+committed `openapi.json`, not a hand-stubbed contract. `pnpm lint && pnpm typecheck && pnpm test &&
+pnpm build` all pass. **Next: Phase 1 (app shell)** — bottom nav, dark/light toggle, router, login
+gate. Build order lives in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
+lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
+(one directory up, outside this repo — planning documents, not committed here). This repo's docs
 distill the sections that govern it; if the two ever disagree, treat that as a bug in this repo's
 docs, not a decision to quietly follow one side.
+
+Known contract gap: the real `openapi.json` has no `/api/v1` prefix (design doc and the backend's
+own `docs/API.md` both claim one) and `GET /leaderboard` doesn't return `player`/
+`deltaSinceLastSession` the way the design doc wants — `src/queries`' leaderboard hook composes
+`/leaderboard` + `/players` + a session's `playerDeltas` client-side as a documented placeholder.
+Both are backend-owned fixes long-term, not frontend workarounds to keep.
 
 ## Non-negotiables
 
