@@ -29,7 +29,11 @@ full loop is verifiable end to end. Found two real bugs along the way (see Scars
 silently bypassed MSW entirely due to a `fetch`-capture-at-creation issue, and `DeltaBadge` wasn't
 rounding, leaking raw Elo deltas into the UI. `pnpm lint && pnpm typecheck && pnpm test && pnpm
 build` all pass; the full record → result → leaderboard-updates loop verified against a running dev
-server. **Next: Phase 4 (player profile).** Build order lives in
+server (MSW). Since then, verified for real against the live backend (not MSW) in an actual
+browser: login/cookie auth, leaderboard, record-match, and the live-session banner all work
+correctly against real Postgres data. The only blocker was the backend having no CORS
+configuration — fixed there, not worked around here (see `fc-rating-backend`'s CLAUDE.md); no
+frontend code changes were needed. **Next: Phase 4 (player profile).** Build order lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
 lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
 (one directory up, outside this repo — planning documents, not committed here). This repo's docs
