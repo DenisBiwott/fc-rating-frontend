@@ -12,7 +12,7 @@ competitive leaderboard, for a friend group. Vite + TypeScript strict + Tailwind
 TanStack Query. The record-match flow is the product: it must complete in under 10 seconds,
 one-handed, on a phone. Everything else is secondary.
 
-**Status:** build-order Phases 0-3 done. Phase 0: tooling scaffold (Vite + Vue 3 + TS strict,
+**Status:** build-order Phases 0-4 done. Phase 0: tooling scaffold (Vite + Vue 3 + TS strict,
 Tailwind v4, ESLint+Prettier, Vitest), OpenAPI contract sync run for real against
 `fc-rating-backend`'s committed `openapi.json`. Phase 1: auth (Vue Router guard, login, theme
 composable), the `BottomNav`/`App.vue` shell. Phase 2: the real leaderboard (1a compact ledger),
@@ -63,10 +63,12 @@ real, awaited leaderboard `fetchQuery` before invalidating the roster/players qu
 surfaced a genuine backend CORS gap (fixed there, not worked around here): PATCH wasn't in
 `@fastify/cors`'s allowed methods, so this repo's first-ever PATCH call 405'd at the browser's
 preflight.
-**Still open, not yet built: the public-viewing access-model change** — leaderboard/roster/
-profile/match-history/sessions become reachable without login; only record-match and admin still
-require it. `meta.public`/`meta.requiresAuth` need decoupling in `src/router/index.ts` first —
-`meta.public` currently also controls hiding `BottomNav`.
+**Public-viewing access model shipped 2026-09-10.** `meta.public`/`meta.requiresAuth` are now
+decoupled in `src/router/index.ts` — `meta.public` keeps its narrower meaning (hide `BottomNav`;
+`/login` and the 404 only), and a new `meta.requiresAuth`, set only on `/record` and `/admin`,
+gates the router guard. Leaderboard, players roster, player profile, match history, and sessions
+all render for an anonymous visitor with the nav intact, matching the backend's now-public GET
+routes; `useCurrentUser`'s 401-means-logged-out handling is unaffected.
 
 **Next: Phase 5 (match history).** Build order lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
