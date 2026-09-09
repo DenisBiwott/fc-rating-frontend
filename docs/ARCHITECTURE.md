@@ -30,6 +30,27 @@ Components stay small and call into `queries/` hooks; they never call `fetch` di
 code splitting is required, with the leaderboard + record-match screens in the first chunk — those
 are the two screens that matter on a phone at the table.
 
+## Responsive shell
+
+Neither design doc says anything about a viewport wider than design-spec.md's 390×844 target —
+every fixed column width and component size in that spec is a phone-viewport number. Rather than
+design a second, desktop-native visual language with no spec to follow, `App.vue` contains the
+unmodified mobile layout in a fixed-width (390px) "phone card" above the `sm` (640px) breakpoint:
+rounded corners (`34px`, design-spec.md's own `phone frame` radius token — the only hint either
+doc gives about a wider viewport), a subtle border, floating on a `bg-nav`-toned backdrop (reusing
+an existing token rather than inventing a new one). Below `sm`, the card *is* the viewport —
+edge-to-edge, unchanged from a plain mobile page. No component below `App.vue` needs to know this
+exists.
+
+`BottomNav` is absolutely positioned (`bottom-0`) within that same card, which is `position:
+relative` — not `position: fixed` against the real viewport, which would escape the card's
+boundary on desktop and pin to the browser window instead. `RouterView` is the only scrollable
+region (`overflow-y-auto` on a `flex-1` sibling inside a fixed-height, `overflow-hidden` card)
+with bottom padding sized to clear the nav, so content scrolls independently while the nav stays
+put — this is also what fixed a real bug, not just a desktop concern: previously the nav was a
+normal flex-flow sibling after `RouterView`, so a leaderboard taller than the viewport pushed it
+below the fold entirely.
+
 ## State management
 
 Server state (players, leaderboard, matches, sessions) lives entirely in TanStack Query — fetched,

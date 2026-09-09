@@ -1,4 +1,8 @@
 <script setup lang="ts">
+// Desktop treatment: above `sm`, the mobile layout is contained in a fixed-width "phone card"
+// (design-spec.md's Geometry section already has a `phone frame 34` radius token, even though
+// neither design doc ever describes a wider viewport) rather than stretching edge to edge.
+// Below `sm`, this is unchanged from the original edge-to-edge mobile layout.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import BottomNav from '@/components/BottomNav.vue'
@@ -17,8 +21,12 @@ const showNav = computed(() => !route.meta.public)
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col bg-bg-canvas">
-    <RouterView class="flex flex-1 flex-col" />
-    <BottomNav v-if="showNav" />
+  <div class="flex min-h-dvh items-center justify-center bg-bg-canvas sm:bg-bg-nav sm:p-6">
+    <div
+      class="relative flex h-dvh w-full flex-col overflow-hidden bg-bg-canvas sm:h-[calc(100dvh-3rem)] sm:max-w-[390px] sm:rounded-[34px] sm:border sm:border-border-default sm:shadow-2xl"
+    >
+      <RouterView class="flex flex-1 flex-col overflow-y-auto" :class="showNav ? 'pb-24' : ''" />
+      <BottomNav v-if="showNav" class="absolute inset-x-0 bottom-0 z-10" />
+    </div>
   </div>
 </template>
