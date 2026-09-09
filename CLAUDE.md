@@ -43,10 +43,12 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
 - **API types are generated** (`openapi-typescript` from `openapi.json`), never hand-written.
   `scripts/sync-contract.ts` regenerates them; CI fails if `schema.d.ts` is stale relative to the
   committed contract.
-- **Server state lives in TanStack Query. The only client state is the record-match form**, held
-  in one composable (`useRecordMatchForm`) as an explicit state machine (`selecting → scoring →
-  submitting → result → done`). No Pinia, no Vuex — there is deliberately nothing else to put in a
-  store yet.
+- **Server state lives in TanStack Query. The only client state so far is the record-match form**,
+  held in one composable (`useRecordMatchForm`) as an explicit state machine (`selecting → scoring
+  → submitting → result → done`). No Pinia/Vuex introduced so far because nothing has needed
+  one — not a permanent ban. If a genuine cross-cutting client-state need emerges that a composable
+  can't reasonably express, Pinia (not Vuex — Pinia is Vue's current recommendation) is a legitimate
+  addition; that's an architecture decision worth a line in this file, not a silent dependency add.
 - **The record-match flow is one scrolling card** — no wizard, no modal, no login inside it. Tap
   Home/Away slots to fill from a recently-played grid, two score steppers, a debounced (150ms)
   preview line, a full-width Confirm using a client-generated UUID v7 reused verbatim on retry
@@ -57,8 +59,8 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   (`font-variant-numeric: tabular-nums`); color is never the only signal (form strip uses `W`/`L`/
   `D` letters, deltas use `+`/`−`). Every tap target is ≥ 44px. Full detail in
   [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
-- Do **not** introduce: Pinia, Vuex, Axios, hand-written API types, any UI kit besides shadcn-vue,
-  or Nuxt.
+- Do **not** introduce: Vuex, Axios, hand-written API types, any UI kit besides shadcn-vue, or
+  Nuxt. (Pinia is not on this list — see the state-management non-negotiable above.)
 
 ## Scars
 
