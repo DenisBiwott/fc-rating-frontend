@@ -1,0 +1,32 @@
+<script setup lang="ts">
+// design-spec.md's MatchSlot spec. Empty state is a dashed avatar outline and no name; tapping a
+// filled slot clears it (grid tiles only ever fill an empty slot, never clear one).
+import AvatarTile from '@/components/AvatarTile.vue'
+import RatingNumber from '@/components/RatingNumber.vue'
+
+const props = defineProps<{
+  label: 'HOME' | 'AWAY'
+  name: string | null
+  rating: number | null
+}>()
+
+const emit = defineEmits<{ clear: [] }>()
+</script>
+
+<template>
+  <button
+    type="button"
+    class="flex flex-1 flex-col items-center gap-2 rounded-2xl bg-bg-raised p-4 disabled:cursor-default"
+    :disabled="!name"
+    :aria-label="name ? `Clear ${props.label.toLowerCase()} player ${name}` : `${props.label}, empty`"
+    @click="emit('clear')"
+  >
+    <span class="font-mono text-[10px] font-semibold tracking-[0.14em] text-text-faint uppercase">{{
+      label
+    }}</span>
+    <AvatarTile v-if="name" :name="name" :size="52" />
+    <span v-else class="h-13 w-13 flex-none rounded-full border border-dashed border-border-default" />
+    <span v-if="name" class="max-w-full truncate text-base font-semibold text-text-primary">{{ name }}</span>
+    <RatingNumber v-if="rating !== null" :value="rating" class="text-[11px] text-text-muted" />
+  </button>
+</template>
