@@ -520,6 +520,7 @@ export interface operations {
                         name: string;
                         avatarUrl: string | null;
                         isActive: boolean;
+                        lastPlayedAt: string | null;
                     }[];
                 };
             };
@@ -579,6 +580,8 @@ export interface operations {
                         playerId: string;
                         name: string;
                         isActive: boolean;
+                        /** Format: date-time */
+                        createdAt: string;
                         rating: number;
                         gamesPlayed: number;
                         wins: number;
@@ -590,6 +593,13 @@ export interface operations {
                             result: "W" | "L" | "D";
                             length: number;
                         } | null;
+                        bestStreak: {
+                            /** @enum {string} */
+                            result: "W" | "L" | "D";
+                            length: number;
+                        } | null;
+                        goalsFor: number;
+                        goalsAgainst: number;
                         isProvisional: boolean;
                     };
                 };
