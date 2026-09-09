@@ -1,6 +1,8 @@
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { createApp } from 'vue'
+import { queryClient } from './api/query-client'
 import App from './App.vue'
+import router from './router'
 import './styles/main.css'
 
 async function enableMocking(): Promise<void> {
@@ -10,5 +12,5 @@ async function enableMocking(): Promise<void> {
 }
 
 enableMocking().then(() => {
-  createApp(App).use(VueQueryPlugin).mount('#app')
+  createApp(App).use(VueQueryPlugin, { queryClient }).use(router).mount('#app')
 })

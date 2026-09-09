@@ -1,10 +1,15 @@
 <script setup lang="ts">
-// Placeholder shell — the real bottom-nav app shell lands in build-order Phase 1.
-// See docs/DEVELOPMENT.md.
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import BottomNav from '@/components/BottomNav.vue'
+
+const route = useRoute()
+const showNav = computed(() => !route.meta.public)
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center">
-    <p class="font-mono text-sm text-text-muted">FC Rating — scaffold</p>
+  <div class="flex min-h-screen flex-col bg-bg-canvas">
+    <RouterView class="flex flex-1 flex-col" />
+    <BottomNav v-if="showNav" />
   </div>
 </template>
