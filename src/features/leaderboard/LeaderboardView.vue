@@ -47,6 +47,7 @@ const { data, isPending, isError } = useLeaderboard()
         <PlayerRow
           v-for="row in data.rows"
           :key="row.playerId"
+          :player-id="row.playerId"
           :rank="row.rank"
           :name="row.name"
           :wins="row.wins"

@@ -10,6 +10,7 @@ import RatingNumber from '@/components/RatingNumber.vue'
 type MatchResult = 'W' | 'L' | 'D'
 
 const props = defineProps<{
+  playerId: string
   rank: number
   name: string
   wins: number
@@ -38,7 +39,10 @@ const unrated = computed(() => props.gamesPlayed === 0)
 </script>
 
 <template>
-  <div class="flex items-center gap-2.75 border-t border-border-hairline px-5 py-2.25">
+  <RouterLink
+    :to="{ name: 'player-profile', params: { id: playerId } }"
+    class="flex items-center gap-2.75 border-t border-border-hairline px-5 py-2.25"
+  >
     <span class="w-3.75 flex-none text-right font-mono text-sm font-bold" :class="rankColorClass">
       {{ rank }}
     </span>
@@ -72,5 +76,5 @@ const unrated = computed(() => props.gamesPlayed === 0)
     />
 
     <DeltaBadge :value="delta" class="w-10 flex-none text-right text-xs" />
-  </div>
+  </RouterLink>
 </template>

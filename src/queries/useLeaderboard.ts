@@ -154,7 +154,14 @@ export function applyRecordedMatchOptimistically(
         if (row.playerId === outcome.away.playerId) return updateRow(row, outcome.away)
         return row
       })
-      .sort((a, b) => (b.rating !== a.rating ? b.rating - a.rating : a.playerId.localeCompare(b.playerId)))
+      .sort((a, b) => {
+        // Mirrors the backend's rankPlayers() (src/domain/leaderboard/compute.ts): 0-game
+        // (UNRATED) players always sort last, regardless of rating.
+        const aUnrated = a.gamesPlayed === 0
+        const bUnrated = b.gamesPlayed === 0
+        if (aUnrated !== bUnrated) return aUnrated ? 1 : -1
+        return b.rating !== a.rating ? b.rating - a.rating : a.playerId.localeCompare(b.playerId)
+      })
       .map((row, index) => ({ ...row, rank: index + 1 }))
 
     return {
