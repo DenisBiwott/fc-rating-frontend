@@ -195,6 +195,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/matches/{id}/void-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview the ratings/ranks that would result from voiding a match, without voiding it (requires admin role) */
+        get: operations["previewVoidMatch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/matches/{id}/void": {
         parameters: {
             query?: never;
@@ -1002,6 +1019,42 @@ export interface operations {
                             };
                             upset: boolean;
                         } | null;
+                    };
+                };
+            };
+        };
+    };
+    previewVoidMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        matchId: string;
+                        players: {
+                            playerId: string;
+                            ratingBefore: number;
+                            gamesPlayedBefore: number;
+                            ratingAfter: number;
+                            gamesPlayedAfter: number;
+                        }[];
+                        rankChanges: {
+                            playerId: string;
+                            from: number;
+                            to: number;
+                        }[];
                     };
                 };
             };

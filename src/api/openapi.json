@@ -318,11 +318,6 @@
             "required": false
           }
         ],
-        "security": [
-          {
-            "sessionCookie": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -392,11 +387,6 @@
             "in": "path",
             "name": "id",
             "required": true
-          }
-        ],
-        "security": [
-          {
-            "sessionCookie": []
           }
         ],
         "responses": {
@@ -670,11 +660,6 @@
             "required": true
           }
         ],
-        "security": [
-          {
-            "sessionCookie": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -758,11 +743,6 @@
             "in": "path",
             "name": "id",
             "required": true
-          }
-        ],
-        "security": [
-          {
-            "sessionCookie": []
           }
         ],
         "responses": {
@@ -1456,11 +1436,6 @@
             "required": false
           }
         ],
-        "security": [
-          {
-            "sessionCookie": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -1569,11 +1544,6 @@
             "in": "path",
             "name": "id",
             "required": true
-          }
-        ],
-        "security": [
-          {
-            "sessionCookie": []
           }
         ],
         "responses": {
@@ -1917,6 +1887,107 @@
         }
       }
     },
+    "/matches/{id}/void-preview": {
+      "get": {
+        "operationId": "previewVoidMatch",
+        "summary": "Preview the ratings/ranks that would result from voiding a match, without voiding it (requires admin role)",
+        "tags": [
+          "matches"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matchId": {
+                      "type": "string"
+                    },
+                    "players": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "playerId": {
+                            "type": "string"
+                          },
+                          "ratingBefore": {
+                            "type": "number"
+                          },
+                          "gamesPlayedBefore": {
+                            "type": "number"
+                          },
+                          "ratingAfter": {
+                            "type": "number"
+                          },
+                          "gamesPlayedAfter": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "playerId",
+                          "ratingBefore",
+                          "gamesPlayedBefore",
+                          "ratingAfter",
+                          "gamesPlayedAfter"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "rankChanges": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "playerId": {
+                            "type": "string"
+                          },
+                          "from": {
+                            "type": "number"
+                          },
+                          "to": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "playerId",
+                          "from",
+                          "to"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "matchId",
+                    "players",
+                    "rankChanges"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/matches/{id}/void": {
       "post": {
         "operationId": "voidMatch",
@@ -2152,11 +2223,6 @@
         "tags": [
           "leaderboard"
         ],
-        "security": [
-          {
-            "sessionCookie": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -2355,11 +2421,6 @@
         "tags": [
           "sessions"
         ],
-        "security": [
-          {
-            "sessionCookie": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -2419,11 +2480,6 @@
         "summary": "Get the currently open session, if any (204 if none)",
         "tags": [
           "sessions"
-        ],
-        "security": [
-          {
-            "sessionCookie": []
-          }
         ],
         "responses": {
           "200": {
@@ -2493,11 +2549,6 @@
             "in": "path",
             "name": "id",
             "required": true
-          }
-        ],
-        "security": [
-          {
-            "sessionCookie": []
           }
         ],
         "responses": {

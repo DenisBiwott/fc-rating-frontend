@@ -4,8 +4,10 @@ import { currentUserQueryOptions } from '@/queries/useCurrentUser'
 
 declare module 'vue-router' {
   interface RouteMeta {
-    /** Skips the auth guard — set on /login and the 404 catch-all. */
+    /** Hides BottomNav — set on /login and the 404 catch-all, which aren't real app screens. */
     public?: boolean
+    /** Requires a logged-in session. Unset routes are public reads. */
+    requiresAuth?: boolean
   }
 }
 
@@ -21,6 +23,7 @@ const router = createRouter({
       path: '/record',
       name: 'record-match',
       component: () => import('@/features/record-match/RecordMatchView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/players',
@@ -47,6 +50,7 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: () => import('@/features/admin/AdminView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',
@@ -63,10 +67,10 @@ const router = createRouter({
   ],
 })
 
-// Auth is outside the match flow: every route except /login (and the 404) requires a session.
-// Uses the shared queryClient so a repeat navigation reads the cache instead of refetching.
+// Only record-match and admin require a session — everything else is a public read. Uses the
+// shared queryClient so a repeat navigation reads the cache instead of refetching.
 router.beforeEach(async (to) => {
-  if (to.meta.public) return true
+  if (!to.meta.requiresAuth) return true
 
   const user = await queryClient.ensureQueryData(currentUserQueryOptions)
   if (!user) {
