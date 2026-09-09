@@ -1,10 +1,12 @@
 <script setup lang="ts">
-// FC Rating UI.dc.html §2b. "+ Add" is inert — 2c (the add-player sheet) isn't built yet.
+// FC Rating UI.dc.html §2b/2c.
 import { computed, ref } from 'vue'
 import { usePlayersRoster } from '@/queries/usePlayersRoster'
+import AddPlayerSheet from './AddPlayerSheet.vue'
 import PlayerRosterRow from './PlayerRosterRow.vue'
 
 const showActive = ref(true)
+const addPlayerOpen = ref(false)
 
 const { data: activePlayers } = usePlayersRoster(true)
 const { data: inactivePlayers } = usePlayersRoster(false)
@@ -25,9 +27,8 @@ const inactiveCount = computed(() => inactivePlayers.value?.length ?? 0)
       </div>
       <button
         type="button"
-        disabled
-        title="Coming soon"
-        class="h-9 rounded-[10px] bg-accent-up px-3.5 text-sm font-bold text-accent-up-ink opacity-50"
+        class="h-9 rounded-[10px] bg-accent-up px-3.5 text-sm font-bold text-accent-up-ink"
+        @click="addPlayerOpen = true"
       >
         + Add
       </button>
@@ -65,4 +66,6 @@ const inactiveCount = computed(() => inactivePlayers.value?.length ?? 0)
       No {{ showActive ? 'active' : 'inactive' }} players.
     </p>
   </section>
+
+  <AddPlayerSheet v-model:open="addPlayerOpen" />
 </template>
