@@ -34,6 +34,18 @@ export function useRecordMatchForm() {
   const preview = useMatchPreview()
   const record = useRecordMatch()
 
+  // TanStack Query resets a mutation's `data` to `undefined` the instant a new `.mutate()` call
+  // starts, before the network round trip resolves — every score/player change briefly collapses
+  // `preview.data` to nothing, which made PreviewLine's `v-if="outcome"` unmount and remount on
+  // every edit, visibly shifting the Confirm button below it. `lastOutcome` only ever updates on
+  // a real result, so PreviewLine always has something to render and never collapses mid-edit.
+  // Cleared in `clearSlot` (back to `selecting`) so a genuinely new pairing doesn't show a stale
+  // preview from an unrelated matchup.
+  const lastOutcome = ref<NonNullable<typeof preview.data.value> | null>(null)
+  watch(preview.data, (value) => {
+    if (value) lastOutcome.value = value
+  })
+
   const bothSelected = computed(() => homePlayerId.value !== null && awayPlayerId.value !== null)
   const isValid = computed(
     () => bothSelected.value && homePlayerId.value !== awayPlayerId.value,
@@ -59,6 +71,7 @@ export function useRecordMatchForm() {
     if (side === 'home') homePlayerId.value = null
     else awayPlayerId.value = null
     state.value = 'selecting'
+    lastOutcome.value = null
   }
 
   function swapSides(): void {
@@ -161,6 +174,7 @@ export function useRecordMatchForm() {
     submitError,
     resultSession,
     preview,
+    lastOutcome,
     record,
     selectPlayer,
     clearSlot,

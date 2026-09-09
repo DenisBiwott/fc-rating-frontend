@@ -53,7 +53,7 @@ function handleDone(): void {
 </script>
 
 <template>
-  <section class="flex flex-1 flex-col">
+  <section class="flex h-full flex-none flex-col *:shrink-0">
     <header class="flex items-center justify-between px-5 py-4">
       <button
         type="button"
@@ -103,7 +103,11 @@ function handleDone(): void {
         @set-away="form.setScore('away', $event)"
       />
 
-      <PreviewLine class="mt-3" :outcome="form.preview.data.value ?? null" />
+      <PreviewLine
+        class="mt-3"
+        :outcome="form.lastOutcome.value"
+        :pending="form.preview.isPending.value"
+      />
 
       <button
         type="button"
