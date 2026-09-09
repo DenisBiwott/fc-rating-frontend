@@ -1,5 +1,10 @@
-import { queryOptions, useQuery } from '@tanstack/vue-query'
+import { queryOptions, useQuery, type QueryClient } from '@tanstack/vue-query'
 import { apiClient } from '@/api/client'
+
+// Matches the seeded default-elo config (design doc §4.2). No screen fetches the live rating
+// config yet (that's Phase 7's admin viewer), so this is a documented simplification, not a
+// derived value.
+const PROVISIONAL_GAMES = 10
 
 export type MatchResult = 'W' | 'L' | 'D'
 
@@ -105,4 +110,58 @@ export const leaderboardQueryOptions = queryOptions({
 
 export function useLeaderboard() {
   return useQuery(leaderboardQueryOptions)
+}
+
+interface RecordedSide {
+  playerId: string
+  after: { rating: number; gamesPlayed: number }
+  actualScore: 1 | 0.5 | 0
+  delta: number
+}
+
+/**
+ * Applies a just-recorded match to the cached leaderboard directly (design doc: "optimistically
+ * updated... instead of refetching"), so returning to the leaderboard after the result overlay
+ * shows the new standings immediately rather than a stale-then-refetch flash. Re-sorts and
+ * re-ranks the whole list — a partial patch of just the two affected rows would leave stale ranks
+ * for anyone whose position shifted as a side effect.
+ */
+export function applyRecordedMatchOptimistically(
+  queryClient: QueryClient,
+  outcome: { home: RecordedSide; away: RecordedSide },
+): void {
+  queryClient.setQueryData(leaderboardQueryOptions.queryKey, (old: LeaderboardData | undefined) => {
+    if (!old) return old
+
+    const updateRow = (row: LeaderboardRow, side: RecordedSide): LeaderboardRow => {
+      const result: MatchResult = side.actualScore === 1 ? 'W' : side.actualScore === 0.5 ? 'D' : 'L'
+      return {
+        ...row,
+        rating: side.after.rating,
+        gamesPlayed: side.after.gamesPlayed,
+        wins: row.wins + (result === 'W' ? 1 : 0),
+        losses: row.losses + (result === 'L' ? 1 : 0),
+        draws: row.draws + (result === 'D' ? 1 : 0),
+        form: [...row.form, result].slice(-5),
+        isProvisional: side.after.gamesPlayed < PROVISIONAL_GAMES,
+        deltaSinceLastSession: side.delta,
+      }
+    }
+
+    const rows = old.rows
+      .map((row) => {
+        if (row.playerId === outcome.home.playerId) return updateRow(row, outcome.home)
+        if (row.playerId === outcome.away.playerId) return updateRow(row, outcome.away)
+        return row
+      })
+      .sort((a, b) => (b.rating !== a.rating ? b.rating - a.rating : a.playerId.localeCompare(b.playerId)))
+      .map((row, index) => ({ ...row, rank: index + 1 }))
+
+    return {
+      ...old,
+      rows,
+      totalMatches: Math.round(rows.reduce((sum, r) => sum + r.gamesPlayed, 0) / 2),
+      meanRating: rows.reduce((sum, r) => sum + r.rating, 0) / rows.length,
+    }
+  })
 }
