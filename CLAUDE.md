@@ -64,9 +64,22 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
 
 ## Scars
 
-None yet — this is a greenfield repo. When a bug's fix is non-obvious (the straightforward version
-looks right but is wrong for a reason that isn't visible in the code), it goes here as a one-line
-prohibition + why, with the mechanism in the relevant topic doc.
+- **`main.ts` must import `./composables/useTheme` for its side effect**, even though nothing
+  visibly uses its exports there. The composable's initial class-application and `localStorage`
+  read happen at module-evaluation time (a module-scope `ref` + `watchEffect`), not inside a Vue
+  lifecycle hook — removing the import doesn't error, but the `.dark` class then only gets applied
+  once some route happens to lazily import `useTheme` (currently only `AdminView`), producing an
+  unthemed first paint that silently "fixes itself" the moment you navigate there. Keep the import
+  in `main.ts`, before `mount()`. See `src/composables/useTheme.ts`.
+- **`openapi-fetch` narrows a whole response branch to `never` when a contract documents only one
+  status.** `POST /auth/login`'s `openapi.json` entry has just a `200` response, so TypeScript
+  infers no other branch is reachable — the ordinary "check `!data`, read `error`/`response` in the
+  failure path" pattern fails to typecheck, with `response.status` erroring on a type of `never`
+  despite `response` always being a real `Response` at runtime. Cast the whole result to a
+  permissive shape right after the `await` rather than fight the narrowing (see
+  `src/queries/useCurrentUser.ts`'s `useLogin`). The real fix is the backend documenting its error
+  responses; this is a workaround for a contract that undersells runtime behavior, not a
+  frontend-side design choice worth keeping once that's added.
 
 ## Scope boundaries
 
