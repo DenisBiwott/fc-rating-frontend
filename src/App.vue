@@ -23,7 +23,7 @@ const showNav = computed(() => !route.meta.public)
 <template>
   <div class="flex min-h-dvh items-center justify-center bg-bg-canvas sm:bg-bg-nav sm:p-6">
     <div
-      class="relative flex h-dvh w-full flex-col overflow-hidden bg-bg-canvas sm:h-[calc(100dvh-3rem)] sm:max-w-135 sm:rounded-[34px] sm:border sm:border-border-default sm:shadow-2xl"
+      class="relative flex h-dvh w-full flex-col overflow-hidden bg-bg-canvas sm:h-[calc(100dvh-3rem)] sm:max-w-150 sm:rounded-[34px] sm:border sm:border-border-default sm:shadow-2xl"
     >
       <RouterView class="flex flex-1 flex-col overflow-y-auto" :class="showNav ? 'pb-24' : ''" />
       <BottomNav v-if="showNav" class="absolute inset-x-0 bottom-0 z-10" />

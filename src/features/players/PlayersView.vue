@@ -65,7 +65,11 @@ const inactiveCount = computed(() => inactivePlayers.value?.length ?? 0)
     <p v-if="players?.length === 0" class="px-5 py-6 font-mono text-sm text-text-muted">
       No {{ showActive ? 'active' : 'inactive' }} players.
     </p>
-  </section>
 
-  <AddPlayerSheet v-model:open="addPlayerOpen" />
+    <!-- Kept inside this single root element deliberately: a second root node here would disable
+         Vue's automatic attrs fallthrough, silently dropping the overflow-y-auto/flex-1 classes
+         RouterView passes down and breaking the whole view's scrolling. AddPlayerSheet's visible
+         content teleports via DialogPortal regardless of where it sits in this template. -->
+    <AddPlayerSheet v-model:open="addPlayerOpen" />
+  </section>
 </template>

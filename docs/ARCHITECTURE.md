@@ -47,12 +47,14 @@ existing token rather than inventing a new one). Below `sm`, the card *is* the v
 edge-to-edge, unchanged from a plain mobile page. No component below `App.vue` needs to know this
 exists.
 
-The card's width (540px, wider than design-spec.md's literal 390px target) is a judgment call, not
+The card's width (600px, wider than design-spec.md's literal 390px target) is a judgment call, not
 a spec value — 390px read as "a mobile app running in a browser" rather than something at home on
-a laptop, but going much past ~540px opens a visible gap between a row's record text and its
-rating column, since the name column absorbs the extra width with nothing more to put in it. If
-that gap ever needs to go away at a wider card, the real fix is scaling row content (avatar size,
-font sizes, padding) to use the space, not just picking a bigger number.
+a laptop. Widths past ~540px open a visible gap between a row's record text and its rating column,
+since the name column absorbs the extra width with nothing more to put in it — tried once before
+at 600px and reverted to 540px for exactly that reason, then deliberately re-accepted at 600px so
+the bottom sheets (2c/2d) could match the card's width edge to edge. If that gap becomes a real
+problem, the fix is scaling row content (avatar size, font sizes, padding) to use the space, not
+picking a smaller number.
 
 `BottomNav` is absolutely positioned (`bottom-0`) within that same card, which is `position:
 relative` — not `position: fixed` against the real viewport, which would escape the card's

@@ -143,14 +143,18 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
 
     <p v-else-if="profilePending" class="p-5 font-mono text-sm text-text-muted">Loading…</p>
     <p v-else class="p-5 font-mono text-sm text-text-muted">Player not found.</p>
-  </section>
 
-  <PlayerActionsSheet
-    v-if="profile"
-    v-model:open="actionsOpen"
-    :player-id="id"
-    :name="profile.name"
-    :rank="leaderboardRow?.rank ?? null"
-    :games-played="profile.gamesPlayed"
-  />
+    <!-- Kept inside this single root element deliberately: a second root node here would disable
+         Vue's automatic attrs fallthrough, silently dropping the overflow-y-auto/flex-1 classes
+         RouterView passes down and breaking the whole view's scrolling. PlayerActionsSheet's
+         visible content teleports via DialogPortal regardless of where it sits in this template. -->
+    <PlayerActionsSheet
+      v-if="profile"
+      v-model:open="actionsOpen"
+      :player-id="id"
+      :name="profile.name"
+      :rank="leaderboardRow?.rank ?? null"
+      :games-played="profile.gamesPlayed"
+    />
+  </section>
 </template>

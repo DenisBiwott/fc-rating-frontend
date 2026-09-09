@@ -18,7 +18,10 @@ defineProps<{ title: string; class?: string }>()
     <DialogContent
       :class="
         cn(
-          'fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] translate-y-full flex-col gap-4 rounded-t-3xl border-t border-border-default bg-bg-raised px-5 pt-3 pb-7 shadow-[0_-24px_60px_-20px_rgba(0,0,0,0.85)] transition-transform duration-200 ease-out data-[state=open]:translate-y-0 focus:outline-none',
+          // inset-x-0 + mx-auto + max-w-150 centers this within the viewport at the same width as
+          // App.vue's phone card (sm:max-w-150) — below sm it's still edge-to-edge, matching the
+          // card being the viewport there too.
+          'fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] translate-y-full flex-col gap-4 rounded-t-3xl border-t border-border-default bg-bg-raised px-5 pt-3 pb-7 shadow-[0_-24px_60px_-20px_rgba(0,0,0,0.85)] transition-transform duration-200 ease-out data-[state=open]:translate-y-0 focus:outline-none sm:mx-auto sm:max-w-150',
           $props.class,
         )
       "
