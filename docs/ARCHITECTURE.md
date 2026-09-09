@@ -78,6 +78,8 @@ stale relative to the committed contract (the check itself isn't wired into a CI
 against them once; it isn't a hand-stubbed contract.
 
 `src/mocks/` (MSW) backs operations against an in-memory store, filled in per-resource as each
-build-order phase needs it rather than all at once — auth landed with Phase 1's login gate; the
-deterministic seed (6 players, ~40 matches, one open session) lands with Phase 2's leaderboard.
+build-order phase needs it rather than all at once — auth landed with Phase 1's login gate;
+`src/mocks/seed/leaderboard-seed.ts` (8 players, one open session) landed with Phase 2's
+leaderboard, lifted verbatim from design-spec.md's own "Mock data (use verbatim for seeds and
+MSW)" table rather than the generic "6 players, ~40 matches" this doc originally described.
 Enabled via `VITE_USE_MOCKS=true`.
