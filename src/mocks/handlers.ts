@@ -1,7 +1,7 @@
 import { http, HttpResponse, type HttpHandler } from 'msw'
+import { seedLeaderboardEntries, seedMeanRating, seedPlayers, seedSession } from './seed/leaderboard-seed'
 
-// Minimal in-memory mock session — real seed data (players, matches, sessions) lands with the
-// leaderboard handlers in Phase 2. Any non-empty password logs in; there's no real password to
+// Minimal in-memory mock session. Any non-empty password logs in; there's no real password to
 // match in mock mode.
 let mockLoggedIn = false
 
@@ -33,5 +33,39 @@ export const handlers: HttpHandler[] = [
   http.post('*/auth/logout', () => {
     mockLoggedIn = false
     return new HttpResponse(null, { status: 200 })
+  }),
+
+  http.get('*/players', () => HttpResponse.json(seedPlayers)),
+
+  http.get('*/leaderboard', () =>
+    HttpResponse.json({ entries: seedLeaderboardEntries, meanRating: seedMeanRating }),
+  ),
+
+  http.get('*/sessions/current', () =>
+    HttpResponse.json({
+      id: seedSession.id,
+      name: seedSession.name,
+      startedAt: seedSession.startedAt,
+      endedAt: seedSession.endedAt,
+      createdBy: seedSession.createdBy,
+    }),
+  ),
+
+  http.get('*/sessions/:id', ({ params }) => {
+    if (params.id !== seedSession.id) {
+      return HttpResponse.json(
+        { type: 'about:blank', title: 'Not Found', status: 404 },
+        { status: 404 },
+      )
+    }
+    return HttpResponse.json({
+      id: seedSession.id,
+      name: seedSession.name,
+      startedAt: seedSession.startedAt,
+      endedAt: seedSession.endedAt,
+      matchCount: seedSession.matchCount,
+      playerDeltas: seedSession.playerDeltas,
+      biggestMover: seedSession.biggestMover,
+    })
   }),
 ]
