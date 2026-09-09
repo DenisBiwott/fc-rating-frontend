@@ -10,7 +10,7 @@ const { data, isPending, isError } = useLeaderboard()
 </script>
 
 <template>
-  <section class="flex flex-1 flex-col pb-6">
+  <section class="flex h-full flex-none flex-col pb-6 *:shrink-0">
     <header class="px-5 pt-6 pb-4">
       <h1 class="text-2xl font-bold tracking-[-0.02em] text-text-primary">Leaderboard</h1>
       <p v-if="data" class="mt-1 font-mono text-xs text-text-muted">

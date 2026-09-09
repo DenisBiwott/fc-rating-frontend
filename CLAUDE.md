@@ -107,6 +107,34 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   monkey-patch — gets silently bypassed; every request falls through to a real network call instead
   of being intercepted. Found via `useRecordMatchForm.spec.ts`'s "fetch failed" / DNS-lookup
   failures against a deliberately-unreachable test host.
+- **A routed view's root using `flex-1` inside `RouterView`'s `flex flex-col overflow-y-auto`
+  defeats that overflow, and the naive fix (a `min-height` floor instead) trades a squish bug for a
+  silent-clipping bug.** `<RouterView class="...">` merges its classes directly onto the matched
+  component's own root — there is no separate wrapper element — so "RouterView is scrollable"
+  really means "each view's own root is scrollable," and that only works if the root has a definite
+  (capped) height, not just a floor. `flex-1` (grow+shrink, basis 0) never lets the root exceed its
+  parent's box, so nothing ever overflows and flex-shrink compresses every descendant to fit
+  instead — most visibly a fixed-height button collapsing to a fraction of its declared height.
+  Swapping to `min-h-full` looked like the fix (fills-when-short is preserved, squish is gone), but
+  a floor has no ceiling either: the root just grows to fit *all* its content with nothing capping
+  it, so it never overflows *itself* — the excess is then silently clipped by the outer phone-card's
+  `overflow-hidden`, invisible and unscrollable, which is worse than squishing. The actual fix is
+  `h-full` (a hard 100%, fills when short, caps when tall) *plus* `*:shrink-0` on that same root —
+  because once its height is capped, its own direct children are ordinary flex items with the CSS
+  default `flex-shrink: 1`, so the identical squish bug recurses one level down onto the view's own
+  children unless they're explicitly told not to shrink. All three pieces (`h-full`, `flex-none`,
+  `*:shrink-0`) are required together; any one alone reproduces either the squish or the clipping.
+  See docs/ARCHITECTURE.md#responsive-shell.
+- **A `useMutation`'s `data` resets to `undefined` synchronously the instant a new `.mutate()` call
+  starts, before the network round trip resolves.** `useMatchPreview` is a mutation (not a query)
+  driving a debounced preview derived from form inputs, so every score change or player pick
+  briefly nuked the previous result. `PreviewLine`'s `v-if="outcome"` reacted to that gap by
+  unmounting/remounting on every edit, visibly shifting the Confirm button below it — confirmed via
+  `MutationObserver`, which caught the DOM node being removed and re-added ~13ms apart, too fast to
+  reliably eyeball but clearly visible in real use. Fixed by holding a `lastOutcome` ref in
+  `useRecordMatchForm` that only updates when `preview.data` actually resolves, never resetting on
+  a new call, with `PreviewLine` rendering a same-height skeleton before the first-ever result so
+  even that initial reveal doesn't move anything.
 
 ## Scope boundaries
 

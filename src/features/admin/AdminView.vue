@@ -21,7 +21,7 @@ async function handleLogout(): Promise<void> {
 </script>
 
 <template>
-  <section class="flex flex-1 flex-col gap-4 p-5">
+  <section class="flex h-full flex-none flex-col gap-4 p-5 *:shrink-0">
     <p class="font-mono text-sm text-text-muted">Admin — Phase 7</p>
     <button
       type="button"

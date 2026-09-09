@@ -63,6 +63,20 @@ put — this is also what fixed a real bug, not just a desktop concern: previous
 normal flex-flow sibling after `RouterView`, so a leaderboard taller than the viewport pushed it
 below the fold entirely.
 
+`<RouterView class="...">` does not wrap the routed component in an extra element — Vue Router
+merges those classes directly onto the matched component's own root node. So "RouterView is
+scrollable" really means each view's own root element is scrollable, not some ancestor, and that
+only works with a **capped** height, not just a floor. Every routed view's root therefore carries
+three things together, all required: `h-full` (fills available height when content is short, caps
+it when content is tall, so genuine overflow occurs on the root instead of it silently exceeding
+its container), `flex-none` (no flex-grow/shrink fighting that explicit height), and `*:shrink-0`
+(once the root's height is capped, its own direct children are ordinary flex items with the CSS
+default `flex-shrink: 1` — without this, the same squish this was meant to fix just recurs one
+level down onto the view's own children). See CLAUDE.md's Scars for the two dead ends that came
+before this (a `flex-1` root squishes instead of scrolling; a `min-h-full` root scrolls nothing
+because it never overflows itself, so oversized content is silently clipped by the phone card's
+`overflow-hidden` instead).
+
 ## State management
 
 Server state (players, leaderboard, matches, sessions) lives entirely in TanStack Query — fetched,
