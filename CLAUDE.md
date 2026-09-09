@@ -46,6 +46,19 @@ deferred pending a deliberate decision rather than silently built around. New qu
 `fc-rating-backend/CLAUDE.md`). `RatingSparkline` (hand-rolled SVG, no chart library) computes its
 own scaling rather than copying the source canvas's static points. Verified against the real dev
 server, not MSW — cross-checked against already-known values from this session's Elo investigation.
+**Decided 2026-09-10, not yet built:** viewing screens (leaderboard, players roster, player
+profile) become reachable without login; only record-match and admin still require it. Real
+gotcha to handle as part of this: `meta.public` (`src/router/index.ts`) is currently
+dual-purpose — it both skips the auth guard *and* hides `BottomNav` (`App.vue`'s `showNav =
+computed(() => !route.meta.public)`) — these need decoupling into two separate flags before
+ungating the viewing screens, or the nav will incorrectly disappear on them too. Also decided: 2c's
+Add Player sheet ships (`POST /players`, no rating-override control — stays dropped), leaderboard
+rows become links to the player's profile (matching `PlayerRosterRow.vue`'s existing
+`RouterLink` pattern), and unrated (0-game, not provisional) players sort to the bottom of the
+leaderboard — backend-driven, but check `useLeaderboard.ts`'s `applyRecordedMatchOptimistically`
+for a matching client-side re-sort, since it duplicates the ranking logic for the optimistic
+cache update after recording a match.
+
 **Next: Phase 5 (match history).** Build order lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
 lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
