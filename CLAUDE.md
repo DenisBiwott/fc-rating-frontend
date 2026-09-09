@@ -68,13 +68,19 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
 
 ## Scars
 
-- **`main.ts` must import `./composables/useTheme` for its side effect**, even though nothing
-  visibly uses its exports there. The composable's initial class-application and `localStorage`
-  read happen at module-evaluation time (a module-scope `ref` + `watchEffect`), not inside a Vue
-  lifecycle hook — removing the import doesn't error, but the `.dark` class then only gets applied
-  once some route happens to lazily import `useTheme` (currently only `AdminView`), producing an
-  unthemed first paint that silently "fixes itself" the moment you navigate there. Keep the import
-  in `main.ts`, before `mount()`. See `src/composables/useTheme.ts`.
+- **This already happened once — don't reintroduce it.** `useTheme.ts`'s initial system-preference
+  read and `.dark` class application happen at module-evaluation time (a module-scope `ref` +
+  `watchEffect`), not inside a Vue lifecycle hook, so *something* has to import the module eagerly
+  or it never runs. The first version of this relied on a bare `import './composables/useTheme'`
+  in `main.ts` for that side effect — that line went missing during a commit-splitting pass and
+  nothing caught it (lint doesn't flag an apparently-unused side-effect import as *missing*), so
+  every user who never happened to navigate to `AdminView` (the only other importer) silently got
+  the light theme regardless of system preference, for an entire build-order phase, undetected by
+  its own verification pass (the verification script always visited Admin, incidentally triggering
+  the import). Fixed by calling `useTheme()` from `App.vue`'s `<script setup>` instead — a
+  component that's structurally guaranteed to instantiate, unlike a side-effect import that reads
+  as dead code to skim past. If `useTheme`'s initialization ever needs to move again, keep it
+  somewhere that *must* run, not somewhere that merely happens to.
 - **`openapi-fetch` narrows a whole response branch to `never` when a contract documents only one
   status.** `POST /auth/login`'s `openapi.json` entry has just a `200` response, so TypeScript
   infers no other branch is reachable — the ordinary "check `!data`, read `error`/`response` in the
