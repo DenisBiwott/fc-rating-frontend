@@ -14,7 +14,14 @@ Vitest + Vue Test Utils + MSW. Focus areas, roughly in priority order:
 
 MSW handlers back all of the above against the seeded in-memory store described in
 [ARCHITECTURE.md](ARCHITECTURE.md#contract-sync) — tests should exercise the real query hooks
-against mocked network responses, not mock the query hooks themselves.
+against mocked network responses, not mock the query hooks themselves. `src/test-setup.ts` runs
+the same `handlers` array against an `msw/node` server rather than a browser Service Worker, reset
+between tests (`server.resetHandlers()` + `queryClient.clear()`). Two things make this work that
+aren't obvious from the test code itself: `apiClient` (`src/api/client.ts`) must resolve
+`globalThis.fetch` fresh per call rather than capturing it once at creation — see CLAUDE.md's Scar
+on this — and `vite.config.ts`'s `test.env.VITE_API_BASE` gives requests an absolute (deliberately
+unreachable) base URL, since apiClient's real baseUrl is `''` by design and Node's `fetch` has no
+page origin to resolve a relative one against the way a browser does.
 
 E2E (Playwright, post-MVP): the 10-second record-match flow on a mobile viewport. Not part of MVP
 scope — see design doc §10.

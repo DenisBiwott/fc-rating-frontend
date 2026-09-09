@@ -19,10 +19,15 @@ src/
   components/        # shared: BottomNav, RatingNumber, FormStrip, DeltaBadge, AvatarTile
   views/             # top-level pages that aren't tied to a feature or the bottom nav (LoginView,
                      # NotFoundView)
-  lib/               # utils.ts — shadcn-vue's cn() class-merging helper
+  lib/               # utils.ts (shadcn-vue's cn() helper), uuid.ts (hand-rolled UUID v7 —
+                     # CLAUDE.md's non-negotiable calls for v7 specifically)
   router/            # route table + the auth guard (redirects to /login on no session)
   mocks/             # MSW handlers, filled in per-resource as each phase needs them — not all at
-                     # once from day one
+                     # once from day one. mocks/seed/ is a real, mutable mock backend (an Elo
+                     # engine mirroring fc-rating-backend's algorithm + an in-memory store),
+                     # not static fixtures — recording a match through it actually updates
+                     # ratings, so the record -> result -> leaderboard loop is verifiable
+                     # end to end against MSW
   styles/
 ```
 
@@ -79,8 +84,11 @@ selecting → scoring → submitting → result → done
 
 - **selecting** — home/away slots empty or partially filled from the recently-played grid.
 - **scoring** — both slots filled; score steppers active; preview line fetches
-  `POST /matches/preview` on every score change, debounced 150ms, cancelled the moment submission
-  starts.
+  `POST /matches/preview` on every score change, debounced 150ms. "Cancelled the moment submission
+  starts" means the *pending debounce timer* is cleared — an in-flight preview request already
+  sent isn't aborted (no `AbortController` wiring), since its result is simply unused once the
+  form moves past `scoring`. Deliberately not more precise than that; the debounce already makes
+  overlap rare in practice.
 - **submitting** — `POST /matches` in flight with a client-generated UUID v7. On network failure
   or a 5xx, the composable returns to `scoring` with all state intact and an inline retry — the
   entered match is never lost. A retry reuses the same UUID, so a duplicate that actually reached
@@ -109,5 +117,8 @@ against them once; it isn't a hand-stubbed contract.
 build-order phase needs it rather than all at once — auth landed with Phase 1's login gate;
 `src/mocks/seed/leaderboard-seed.ts` (8 players, one open session) landed with Phase 2's
 leaderboard, lifted verbatim from design-spec.md's own "Mock data (use verbatim for seeds and
-MSW)" table rather than the generic "6 players, ~40 matches" this doc originally described.
-Enabled via `VITE_USE_MOCKS=true`.
+MSW)" table rather than the generic "6 players, ~40 matches" this doc originally described. Phase 3
+turned that static seed into a real mutable store (`mocks/seed/mock-db.ts`) — see the Layout
+section above. Enabled via `VITE_USE_MOCKS=true`; not yet cross-checked against the real backend
+running side by side (`VITE_USE_MOCKS=false`) — that's the next thing to do, not something this
+build order has verified.
