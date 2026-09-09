@@ -1,5 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw'
-import { seedLeaderboardEntries, seedMeanRating, seedPlayers, seedSession } from './seed/leaderboard-seed'
+import * as db from './seed/mock-db'
 
 // Minimal in-memory mock session. Any non-empty password logs in; there's no real password to
 // match in mock mode.
@@ -35,37 +35,70 @@ export const handlers: HttpHandler[] = [
     return new HttpResponse(null, { status: 200 })
   }),
 
-  http.get('*/players', () => HttpResponse.json(seedPlayers)),
+  http.get('*/players', () => HttpResponse.json(db.getPlayers())),
 
-  http.get('*/leaderboard', () =>
-    HttpResponse.json({ entries: seedLeaderboardEntries, meanRating: seedMeanRating }),
-  ),
+  http.get('*/leaderboard', () => HttpResponse.json(db.getLeaderboardResponse())),
 
-  http.get('*/sessions/current', () =>
-    HttpResponse.json({
-      id: seedSession.id,
-      name: seedSession.name,
-      startedAt: seedSession.startedAt,
-      endedAt: seedSession.endedAt,
-      createdBy: seedSession.createdBy,
-    }),
-  ),
+  http.get('*/sessions/current', () => HttpResponse.json(db.getSessionCurrent())),
 
   http.get('*/sessions/:id', ({ params }) => {
-    if (params.id !== seedSession.id) {
+    const summary = db.getSessionSummary(String(params.id))
+    if (!summary) {
       return HttpResponse.json(
         { type: 'about:blank', title: 'Not Found', status: 404 },
         { status: 404 },
       )
     }
-    return HttpResponse.json({
-      id: seedSession.id,
-      name: seedSession.name,
-      startedAt: seedSession.startedAt,
-      endedAt: seedSession.endedAt,
-      matchCount: seedSession.matchCount,
-      playerDeltas: seedSession.playerDeltas,
-      biggestMover: seedSession.biggestMover,
-    })
+    return HttpResponse.json(summary)
+  }),
+
+  http.get('*/matches', ({ request }) => {
+    const limit = Number(new URL(request.url).searchParams.get('limit') ?? '20')
+    return HttpResponse.json({ items: db.getRecentMatches(limit), nextCursor: null })
+  }),
+
+  http.post('*/matches/preview', async ({ request }) => {
+    const body = (await request.json()) as {
+      homePlayerId: string
+      awayPlayerId: string
+      homeScore: number
+      awayScore: number
+    }
+    const outcome = db.previewMatch(body.homePlayerId, body.awayPlayerId, body.homeScore, body.awayScore)
+    if (!outcome) {
+      return HttpResponse.json(
+        { type: 'about:blank', title: 'Unknown player', status: 422 },
+        { status: 422 },
+      )
+    }
+    return HttpResponse.json(outcome)
+  }),
+
+  http.post('*/matches', async ({ request }) => {
+    const body = (await request.json()) as {
+      id: string
+      homePlayerId: string
+      awayPlayerId: string
+      homeScore: number
+      awayScore: number
+      decidedOnPenalties?: boolean
+      sessionId?: string
+    }
+    try {
+      const result = db.recordMatch(
+        body.id,
+        body.homePlayerId,
+        body.awayPlayerId,
+        body.homeScore,
+        body.awayScore,
+        body.decidedOnPenalties ?? false,
+      )
+      return HttpResponse.json(result)
+    } catch {
+      return HttpResponse.json(
+        { type: 'about:blank', title: 'Unknown player', status: 422 },
+        { status: 422 },
+      )
+    }
   }),
 ]
