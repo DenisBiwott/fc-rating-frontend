@@ -46,18 +46,27 @@ deferred pending a deliberate decision rather than silently built around. New qu
 `fc-rating-backend/CLAUDE.md`). `RatingSparkline` (hand-rolled SVG, no chart library) computes its
 own scaling rather than copying the source canvas's static points. Verified against the real dev
 server, not MSW — cross-checked against already-known values from this session's Elo investigation.
-**Decided 2026-09-10, not yet built:** viewing screens (leaderboard, players roster, player
-profile) become reachable without login; only record-match and admin still require it. Real
-gotcha to handle as part of this: `meta.public` (`src/router/index.ts`) is currently
-dual-purpose — it both skips the auth guard *and* hides `BottomNav` (`App.vue`'s `showNav =
-computed(() => !route.meta.public)`) — these need decoupling into two separate flags before
-ungating the viewing screens, or the nav will incorrectly disappear on them too. Also decided: 2c's
-Add Player sheet ships (`POST /players`, no rating-override control — stays dropped), leaderboard
-rows become links to the player's profile (matching `PlayerRosterRow.vue`'s existing
-`RouterLink` pattern), and unrated (0-game, not provisional) players sort to the bottom of the
-leaderboard — backend-driven, but check `useLeaderboard.ts`'s `applyRecordedMatchOptimistically`
-for a matching client-side re-sort, since it duplicates the ranking logic for the optimistic
-cache update after recording a match.
+**2026-09-10: 2c/2d built — 2e (void-match preview) stays deferred**, its backend counterpart is
+a real endpoint now but no frontend screen yet, out of scope this round like 2c/2d were last
+round. `AddPlayerSheet.vue` (2c) and `PlayerActionsSheet.vue` (2d, Rename/Deactivate/Delete)
+un-inert the previously-disabled "Coming soon" affordances. First screens needing a real
+dialog/sheet primitive, so this pulled in shadcn-vue's `Sheet` (`components/ui/sheet/`, built on
+the already-installed `reka-ui`) rather than hand-rolling backdrop/focus-trap/dismiss again.
+`PlayerRow.vue` now links to the player's profile, matching `PlayerRosterRow.vue`;
+`useLeaderboard.ts`'s `applyRecordedMatchOptimistically` mirrors the backend's unrated-sorts-last
+rule. Two real bugs found and fixed during verification, both about `queryClient.ensureQueryData`
+(confirmed from its actual runtime implementation, not just its types): it always returns
+whatever's already cached synchronously and never waits on a revalidation, invalidated or not —
+so `usePlayersRoster.ts`'s leaderboard join served a stale snapshot right after creating/
+renaming/deactivating a player. Fixed by having the create/update/delete-player mutations force a
+real, awaited leaderboard `fetchQuery` before invalidating the roster/players queries. Also
+surfaced a genuine backend CORS gap (fixed there, not worked around here): PATCH wasn't in
+`@fastify/cors`'s allowed methods, so this repo's first-ever PATCH call 405'd at the browser's
+preflight.
+**Still open, not yet built: the public-viewing access-model change** — leaderboard/roster/
+profile/match-history/sessions become reachable without login; only record-match and admin still
+require it. `meta.public`/`meta.requiresAuth` need decoupling in `src/router/index.ts` first —
+`meta.public` currently also controls hiding `BottomNav`.
 
 **Next: Phase 5 (match history).** Build order lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
