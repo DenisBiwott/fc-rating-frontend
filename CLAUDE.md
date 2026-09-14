@@ -70,7 +70,33 @@ gates the router guard. Leaderboard, players roster, player profile, match histo
 all render for an anonymous visitor with the nav intact, matching the backend's now-public GET
 routes; `useCurrentUser`'s 401-means-logged-out handling is unaffected.
 
-**Next: Phase 5 (match history).** Build order lives in
+**MVP simplification pass, 2026-09-14 — Denis's call, not a reversal of the access-model work
+above but the UI polish it was missing.** The public-viewing change left no way to *reach* login
+from a logged-out state (only `/admin`, itself gated, had a logout button) and no visual signal
+that Record/`+ Add`/`···` were admin-only rather than just broken. `AccountBar.vue` is a new,
+persistent shell control mounted in `App.vue` above `RouterView` (hidden on `/login`/404 like
+`BottomNav`) — deliberately not a floating top-right corner chip, since `PlayersView`'s `+ Add`
+and `PlayerProfileView`'s `···` already live in that exact corner on their own screens. Record,
+`+ Add`, and `···` are now visibly muted for anonymous visitors; the non-route ones (`+ Add`,
+`···`) redirect to `/login?redirect=…` on click, mirroring the router guard's own pattern.
+`useIsAdmin()` (`src/queries/useCurrentUser.ts`) factors out the shared role check.
+
+Also shipped: **2e (void-match), finally wired up** — reusing the profile's existing match list as
+the entry point rather than building Phase 5's dedicated match-history screen, and **explicitly
+skipping Phase 5 (match history) and Phase 6 (sessions) for this MVP**, not deferring them by
+default — the product runs as one long-lived session (already open in the dev database; no
+session-management UI needed, `sessionId` was already optional on `recordMatch`), which also
+means Phase 5's "grouped by session" premise doesn't apply. `ProfileMatchRow.vue` shows a void icon
+only for admins (not merely disabled — noise otherwise); `VoidMatchSheet.vue` (modeled on
+`PlayerActionsSheet.vue`) previews recalculated ratings via the already-shipped
+`GET /matches/:id/void-preview` before confirming. `correctMatch` stays unbuilt — void only, per
+Denis. Verified end to end against the real backend: voiding a match flipped `isVoid`, recalculated
+ratings exactly as previewed, and both the profile and leaderboard updated without a manual
+refresh.
+
+**Next: hosting**, per Denis's explicit sequencing — Phase 7 (admin — rating-config viewer/rebuild
+button) is real remaining work but wasn't asked for before the hosting push; revisit it after.
+Build order otherwise lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
 lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
 (one directory up, outside this repo — planning documents, not committed here). This repo's docs
