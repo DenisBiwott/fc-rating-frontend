@@ -17,6 +17,9 @@ async function handleSubmit(): Promise<void> {
 
 <template>
   <section class="flex h-full flex-none flex-col justify-center gap-6 bg-bg-canvas p-5 *:shrink-0">
+    <RouterLink :to="{ name: 'leaderboard' }" class="text-[15px] text-text-secondary">
+      &lsaquo; Table
+    </RouterLink>
     <h1 class="text-2xl font-bold text-text-primary">FC Rating</h1>
     <form class="flex flex-col gap-3" @submit.prevent="handleSubmit">
       <input

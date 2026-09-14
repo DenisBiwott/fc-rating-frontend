@@ -5,6 +5,7 @@
 // Below `sm`, this is unchanged from the original edge-to-edge mobile layout.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import AccountBar from '@/components/AccountBar.vue'
 import BottomNav from '@/components/BottomNav.vue'
 import { useTheme } from '@/composables/useTheme'
 
@@ -25,6 +26,7 @@ const showNav = computed(() => !route.meta.public)
     <div
       class="relative flex h-dvh w-full flex-col overflow-hidden bg-bg-canvas sm:h-[calc(100dvh-3rem)] sm:max-w-150 sm:rounded-[34px] sm:border sm:border-border-default sm:shadow-2xl"
     >
+      <AccountBar v-if="showNav" />
       <RouterView class="flex flex-1 flex-col overflow-y-auto" :class="showNav ? 'pb-24' : ''" />
       <BottomNav v-if="showNav" class="absolute inset-x-0 bottom-0 z-10" />
     </div>
