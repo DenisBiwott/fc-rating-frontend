@@ -94,8 +94,19 @@ Denis. Verified end to end against the real backend: voiding a match flipped `is
 ratings exactly as previewed, and both the profile and leaderboard updated without a manual
 refresh.
 
-**Next: hosting**, per Denis's explicit sequencing — Phase 7 (admin — rating-config viewer/rebuild
-button) is real remaining work but wasn't asked for before the hosting push; revisit it after.
+**Hosting, 2026-09-14: backend live on Cloud Run, frontend prepped for Netlify.** Backend is
+deployed and verified at `https://fc-rating-1067185865527.europe-west1.run.app/` (see
+`fc-rating-backend/CLAUDE.md`). This repo gained `netlify.toml` (build `pnpm build`, publish
+`dist`, `NODE_VERSION=22` pinned since none was declared before, an SPA fallback redirect for
+`createWebHistory`) — Netlify site creation and its `VITE_API_BASE`/`VITE_USE_MOCKS` env vars are
+a manual dashboard step, not committed here. One real cross-origin bug surfaced and was fixed on
+the backend side (not here): the session cookie was `SameSite=Lax`, which is silently withheld on
+cross-*site* `fetch`/XHR (Netlify and Cloud Run are different registrable domains, unlike
+`localhost:5173`→`localhost:3000` in dev, which counts as same-site) — now `SameSite=None; Secure`.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Not yet done: the actual Netlify site connection,
+setting Cloud Run's `CORS_ORIGIN` to the final Netlify URL, and end-to-end verification in a real
+browser. Phase 7 (admin — rating-config viewer/rebuild button) is real remaining work but wasn't
+asked for before the hosting push; revisit after hosting is verified live.
 Build order otherwise lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
 lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
@@ -230,4 +241,4 @@ work.
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, build order, mocks, contract sync |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Env vars |
 | [docs/TESTING.md](docs/TESTING.md) | Testing strategy, what MSW covers |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Docker, Caddy, CI |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Netlify, cross-origin CORS/cookie requirements, CI |
