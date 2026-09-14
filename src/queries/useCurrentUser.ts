@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { computed, type ComputedRef } from 'vue'
 import { apiClient } from '@/api/client'
 
 export interface CurrentUser {
@@ -22,6 +23,12 @@ export const currentUserQueryOptions = queryOptions({
 
 export function useCurrentUser() {
   return useQuery(currentUserQueryOptions)
+}
+
+/** Shared by every control that mutes/redirects for non-admins (BottomNav, PlayersView, PlayerProfileView, …). */
+export function useIsAdmin(): ComputedRef<boolean> {
+  const { data: user } = useCurrentUser()
+  return computed(() => user.value?.role === 'admin')
 }
 
 export function useLogin() {

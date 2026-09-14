@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // FC Rating UI.dc.html §2b/2c.
 import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useIsAdmin } from '@/queries/useCurrentUser'
 import { usePlayersRoster } from '@/queries/usePlayersRoster'
 import AddPlayerSheet from './AddPlayerSheet.vue'
 import PlayerRosterRow from './PlayerRosterRow.vue'
@@ -14,6 +16,18 @@ const { data: inactivePlayers } = usePlayersRoster(false)
 const players = computed(() => (showActive.value ? activePlayers.value : inactivePlayers.value))
 const activeCount = computed(() => activePlayers.value?.length ?? 0)
 const inactiveCount = computed(() => inactivePlayers.value?.length ?? 0)
+
+const isAdmin = useIsAdmin()
+const route = useRoute()
+const router = useRouter()
+
+function handleAddClick(): void {
+  if (isAdmin.value) {
+    addPlayerOpen.value = true
+    return
+  }
+  void router.push({ name: 'login', query: { redirect: route.fullPath } })
+}
 </script>
 
 <template>
@@ -28,7 +42,8 @@ const inactiveCount = computed(() => inactivePlayers.value?.length ?? 0)
       <button
         type="button"
         class="h-9 rounded-[10px] bg-accent-up px-3.5 text-sm font-bold text-accent-up-ink"
-        @click="addPlayerOpen = true"
+        :class="isAdmin ? '' : 'opacity-40'"
+        @click="handleAddClick"
       >
         + Add
       </button>

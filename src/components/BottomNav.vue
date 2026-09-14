@@ -3,6 +3,12 @@
 // text tabs (no icons — design-spec.md §5 forbids icon-decoration), a 62px green FAB pulled up
 // -22px for Record.
 import { RouterLink } from 'vue-router'
+import { useIsAdmin } from '@/queries/useCurrentUser'
+
+// Record still routes and works for an anonymous visitor (the router guard already redirects to
+// /login, same as any other requiresAuth route) — this only mutes the styling so it stops
+// implying the action is fully available to everyone.
+const isAdmin = useIsAdmin()
 </script>
 
 <template>
@@ -20,6 +26,7 @@ import { RouterLink } from 'vue-router'
     <RouterLink
       to="/record"
       class="-mt-[22px] flex h-[62px] w-[62px] flex-col items-center justify-center gap-0.5 rounded-full bg-accent-up text-accent-up-ink shadow-[0_10px_28px_-8px_rgba(52,211,153,0.55)]"
+      :class="isAdmin ? '' : 'opacity-40 shadow-none'"
     >
       <span class="text-[9px] font-bold tracking-[0.08em]">RECORD</span>
     </RouterLink>
