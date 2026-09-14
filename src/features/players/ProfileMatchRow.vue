@@ -4,9 +4,16 @@
 import { computed } from 'vue'
 import DeltaBadge from '@/components/DeltaBadge.vue'
 import ResultChip from '@/components/ResultChip.vue'
+import { useIsAdmin } from '@/queries/useCurrentUser'
 import type { PlayerMatchRow } from '@/queries/usePlayerMatches'
 
 const props = defineProps<{ match: PlayerMatchRow }>()
+const emit = defineEmits<{ void: [match: PlayerMatchRow] }>()
+
+// Rendered only for admins, not just disabled — a void icon on every row for every anonymous
+// visitor would be visual noise for a control almost nobody can use. voidMatch.ts is what
+// actually gates the mutation server-side; this is purely a discoverability affordance.
+const isAdmin = useIsAdmin()
 
 // Today's matches show a time ("21:49"); older ones show a short date ("Sep 5") — matches the
 // canvas mockup's own distinction between the live session's rows and an older casual match.
@@ -36,5 +43,14 @@ const timeLabel = computed(() => {
       {{ match.selfScore }}–{{ match.opponentScore }}
     </span>
     <DeltaBadge :value="match.delta" class="w-10 flex-none text-right text-xs" />
+    <button
+      v-if="isAdmin"
+      type="button"
+      aria-label="Void this match"
+      class="flex h-6 w-6 flex-none items-center justify-center rounded-full text-sm text-text-faint"
+      @click="emit('void', match)"
+    >
+      &times;
+    </button>
   </div>
 </template>

@@ -4,9 +4,11 @@
 // players, so a deactivated player's profile simply omits the rank badge and delta line (still a
 // full historical record otherwise, per player-profile.ts's own comment on the backend).
 import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AvatarTile from '@/components/AvatarTile.vue'
 import DeltaBadge from '@/components/DeltaBadge.vue'
 import RatingNumber from '@/components/RatingNumber.vue'
+import { useIsAdmin } from '@/queries/useCurrentUser'
 import { useLeaderboard } from '@/queries/useLeaderboard'
 import { usePlayerMatches } from '@/queries/usePlayerMatches'
 import { usePlayerProfile } from '@/queries/usePlayerProfile'
@@ -15,15 +17,38 @@ import PlayerActionsSheet from './PlayerActionsSheet.vue'
 import ProfileMatchRow from './ProfileMatchRow.vue'
 import ProfileStatCard from './ProfileStatCard.vue'
 import RatingSparkline from './RatingSparkline.vue'
+import VoidMatchSheet from './VoidMatchSheet.vue'
+import type { PlayerMatchRow as PlayerMatchRowData } from '@/queries/usePlayerMatches'
 
 const props = defineProps<{ id: string }>()
 
 const actionsOpen = ref(false)
+const isAdmin = useIsAdmin()
+const route = useRoute()
+const router = useRouter()
+
+// One shared sheet instance for the whole match list, rather than one per row — voidTarget holds
+// which row's match is being voided; the sheet's own open state is derived from it.
+const voidTarget = ref<PlayerMatchRowData | null>(null)
+const voidSheetOpen = computed({
+  get: () => voidTarget.value !== null,
+  set: (isOpen) => {
+    if (!isOpen) voidTarget.value = null
+  },
+})
 
 const { data: profile, isPending: profilePending } = usePlayerProfile(props.id)
 const { data: leaderboard } = useLeaderboard()
 const { data: history } = useRatingHistory(props.id)
 const { data: matches, isPending: matchesPending } = usePlayerMatches(props.id, 20)
+
+function handleActionsClick(): void {
+  if (isAdmin.value) {
+    actionsOpen.value = true
+    return
+  }
+  void router.push({ name: 'login', query: { redirect: route.fullPath } })
+}
 
 const leaderboardRow = computed(() => leaderboard.value?.rows.find((r) => r.playerId === props.id))
 
@@ -62,7 +87,8 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
           type="button"
           aria-label="Player actions"
           class="flex h-8 w-8 items-center justify-center rounded-full border border-border-default bg-bg-raised text-sm text-text-secondary"
-          @click="actionsOpen = true"
+          :class="isAdmin ? '' : 'opacity-40'"
+          @click="handleActionsClick"
         >
           ···
         </button>
@@ -138,7 +164,12 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
       <div v-if="!matchesPending && matches?.length === 0" class="px-5 pb-6 font-mono text-xs text-text-muted">
         No matches yet.
       </div>
-      <ProfileMatchRow v-for="match in matches" :key="match.matchId" :match="match" />
+      <ProfileMatchRow
+        v-for="match in matches"
+        :key="match.matchId"
+        :match="match"
+        @void="voidTarget = $event"
+      />
     </template>
 
     <p v-else-if="profilePending" class="p-5 font-mono text-sm text-text-muted">Loading…</p>
@@ -155,6 +186,15 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
       :name="profile.name"
       :rank="leaderboardRow?.rank ?? null"
       :games-played="profile.gamesPlayed"
+    />
+
+    <VoidMatchSheet
+      v-if="voidTarget"
+      v-model:open="voidSheetOpen"
+      :match-id="voidTarget.matchId"
+      :opponent-name="voidTarget.opponentName"
+      :self-score="voidTarget.selfScore"
+      :opponent-score="voidTarget.opponentScore"
     />
   </section>
 </template>
