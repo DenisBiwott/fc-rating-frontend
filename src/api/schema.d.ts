@@ -759,6 +759,7 @@ export interface operations {
                     awayPlayerId: string;
                     homeScore: number;
                     awayScore: number;
+                    sessionId?: string;
                 };
             };
         };
@@ -1369,6 +1370,36 @@ export interface operations {
                             kEstablished: number;
                             /** @enum {number} */
                             drawScore: 0.5;
+                            /** @default 400 */
+                            expectationScale: number;
+                            goalDifferenceFactor?: {
+                                enabled: boolean;
+                                /** @default 2 */
+                                divisor: number;
+                                /** @default 1.5 */
+                                cap: number;
+                            };
+                            eliteK?: {
+                                enabled: boolean;
+                                /** @default 1500 */
+                                enterAt: number;
+                                /** @default 1450 */
+                                exitAt: number;
+                                k: number;
+                                /** @default true */
+                                requireEstablished: boolean;
+                            };
+                            repeatOpponentDamping?: {
+                                enabled: boolean;
+                                /** @default 3 */
+                                threshold: number;
+                                /** @default 0.85 */
+                                factor: number;
+                                /** @default 0.25 */
+                                minMultiplier: number;
+                            };
+                            maxDelta?: number;
+                            ratingFloor?: number;
                         };
                         isActive: boolean;
                     }[];
@@ -1396,6 +1427,36 @@ export interface operations {
                         kEstablished: number;
                         /** @enum {number} */
                         drawScore: 0.5;
+                        /** @default 400 */
+                        expectationScale?: number;
+                        goalDifferenceFactor?: {
+                            enabled: boolean;
+                            /** @default 2 */
+                            divisor?: number;
+                            /** @default 1.5 */
+                            cap?: number;
+                        };
+                        eliteK?: {
+                            enabled: boolean;
+                            /** @default 1500 */
+                            enterAt?: number;
+                            /** @default 1450 */
+                            exitAt?: number;
+                            k: number;
+                            /** @default true */
+                            requireEstablished?: boolean;
+                        };
+                        repeatOpponentDamping?: {
+                            enabled: boolean;
+                            /** @default 3 */
+                            threshold?: number;
+                            /** @default 0.85 */
+                            factor?: number;
+                            /** @default 0.25 */
+                            minMultiplier?: number;
+                        };
+                        maxDelta?: number;
+                        ratingFloor?: number;
                     };
                 };
             };
@@ -1419,6 +1480,36 @@ export interface operations {
                             kEstablished: number;
                             /** @enum {number} */
                             drawScore: 0.5;
+                            /** @default 400 */
+                            expectationScale: number;
+                            goalDifferenceFactor?: {
+                                enabled: boolean;
+                                /** @default 2 */
+                                divisor: number;
+                                /** @default 1.5 */
+                                cap: number;
+                            };
+                            eliteK?: {
+                                enabled: boolean;
+                                /** @default 1500 */
+                                enterAt: number;
+                                /** @default 1450 */
+                                exitAt: number;
+                                k: number;
+                                /** @default true */
+                                requireEstablished: boolean;
+                            };
+                            repeatOpponentDamping?: {
+                                enabled: boolean;
+                                /** @default 3 */
+                                threshold: number;
+                                /** @default 0.85 */
+                                factor: number;
+                                /** @default 0.25 */
+                                minMultiplier: number;
+                            };
+                            maxDelta?: number;
+                            ratingFloor?: number;
                         };
                         isActive: boolean;
                     };

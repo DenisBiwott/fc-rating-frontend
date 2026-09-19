@@ -3,6 +3,7 @@
 // (no animation — the box-shadow ring is static per the "nothing pulses" motion rule), elapsed
 // time in mono green.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { formatElapsed } from '@/lib/elapsed'
 
 const props = defineProps<{
   sessionName: string
@@ -23,12 +24,15 @@ onBeforeUnmount(() => {
   clearInterval(intervalId)
 })
 
-const elapsed = computed(() => {
-  const ms = Math.max(0, now.value - new Date(props.startedAt).getTime())
-  const totalMinutes = Math.floor(ms / 60_000)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+const elapsed = computed(() => formatElapsed(new Date(props.startedAt), new Date(now.value)))
+
+// A session delta is a raw sum of Elo deltas — fractional, so it's rounded here, at display time
+// (2dp). The sign comes from the rounded value so a near-zero mover never reads "−0.00".
+const biggestMoverDelta = computed(() => {
+  if (props.biggestMover === null) return ''
+  const magnitude = Math.abs(props.biggestMover.delta).toFixed(2)
+  if (magnitude === '0.00') return magnitude
+  return `${props.biggestMover.delta > 0 ? '+' : '−'}${magnitude}`
 })
 </script>
 
@@ -48,8 +52,7 @@ const elapsed = computed(() => {
       <div class="text-sm font-medium text-text-primary">{{ sessionName }} · open</div>
       <div class="truncate font-mono text-xs text-text-muted">
         {{ matchCount }} matches<template v-if="biggestMover">
-          · biggest mover {{ biggestMover.name }}
-          {{ biggestMover.delta > 0 ? '+' : '−' }}{{ Math.abs(biggestMover.delta) }}</template
+          · biggest mover {{ biggestMover.name }} {{ biggestMoverDelta }}</template
         >
       </div>
     </div>
