@@ -1,11 +1,6 @@
 import { queryOptions, useQuery, type QueryClient } from '@tanstack/vue-query'
 import { apiClient } from '@/api/client'
 
-// Matches the seeded default-elo config (design doc §4.2). No screen fetches the live rating
-// config yet (that's Phase 7's admin viewer), so this is a documented simplification, not a
-// derived value.
-const PROVISIONAL_GAMES = 10
-
 export type MatchResult = 'W' | 'L' | 'D'
 
 export interface LeaderboardRow {
@@ -26,7 +21,11 @@ export interface LeaderboardRow {
 
 export interface LeaderboardData {
   rows: LeaderboardRow[]
-  meanRating: number
+  /** Most recent non-void match across all players (max of GET /players' lastPlayedAt); null if none. */
+  lastMatchAt: string | null
+  /** The active rating config, as GET /leaderboard reports it — never hardcoded here, since the
+   *  active config can change (a new one is activated and rebuilt) without a frontend deploy. */
+  ratingConfig: { name: string; provisionalGames: number }
   /** Derived client-side (sum of gamesPlayed / 2) — the API has no total-matches field, and each
    *  match counts for two players' gamesPlayed. */
   totalMatches: number
@@ -81,6 +80,14 @@ async function fetchLeaderboard(): Promise<LeaderboardData> {
     }
   }
 
+  const lastMatchAt = players.reduce<string | null>(
+    (latest, player) =>
+      player.lastPlayedAt !== null && (latest === null || player.lastPlayedAt > latest)
+        ? player.lastPlayedAt
+        : latest,
+    null,
+  )
+
   const rows: LeaderboardRow[] = board.entries
     .map((entry) => ({
       rank: entry.rank,
@@ -100,7 +107,13 @@ async function fetchLeaderboard(): Promise<LeaderboardData> {
 
   const totalMatches = Math.round(rows.reduce((sum, r) => sum + r.gamesPlayed, 0) / 2)
 
-  return { rows, meanRating: board.meanRating, totalMatches, currentSession }
+  return {
+    rows,
+    lastMatchAt,
+    ratingConfig: board.ratingConfig,
+    totalMatches,
+    currentSession,
+  }
 }
 
 export const leaderboardQueryOptions = queryOptions({
@@ -143,7 +156,7 @@ export function applyRecordedMatchOptimistically(
         losses: row.losses + (result === 'L' ? 1 : 0),
         draws: row.draws + (result === 'D' ? 1 : 0),
         form: [...row.form, result].slice(-5),
-        isProvisional: side.after.gamesPlayed < PROVISIONAL_GAMES,
+        isProvisional: side.after.gamesPlayed < old.ratingConfig.provisionalGames,
         deltaSinceLastSession: side.delta,
       }
     }
@@ -168,7 +181,8 @@ export function applyRecordedMatchOptimistically(
       ...old,
       rows,
       totalMatches: Math.round(rows.reduce((sum, r) => sum + r.gamesPlayed, 0) / 2),
-      meanRating: rows.reduce((sum, r) => sum + r.rating, 0) / rows.length,
+      // The server stamps playedAt at record time, so "now" is what the refetch would say anyway.
+      lastMatchAt: new Date().toISOString(),
     }
   })
 }

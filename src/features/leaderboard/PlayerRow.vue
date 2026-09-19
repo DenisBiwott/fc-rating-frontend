@@ -21,6 +21,7 @@ const props = defineProps<{
   form: MatchResult[]
   gamesPlayed: number
   isProvisional: boolean
+  provisionalGames: number
 }>()
 
 const medal = computed<'gold' | 'silver' | 'bronze' | undefined>(() =>
@@ -56,7 +57,7 @@ const unrated = computed(() => props.gamesPlayed === 0)
         <span
           class="inline-block rounded border border-[#3f3f46] px-1 py-px font-mono text-[9px] font-bold tracking-[0.08em] text-text-secondary"
         >
-          {{ unrated ? 'UNRATED' : `PROV ${gamesPlayed}/10` }}
+          {{ unrated ? 'UNRATED' : `PROV ${gamesPlayed}/${provisionalGames}` }}
         </span>
       </div>
 

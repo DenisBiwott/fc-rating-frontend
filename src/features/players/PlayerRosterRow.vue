@@ -48,7 +48,7 @@ const matchesLabel = computed(() =>
           v-if="player.isProvisional"
           class="inline-block rounded border border-border-default px-1 py-px font-mono text-[9px] font-bold tracking-[0.08em] text-text-secondary"
         >
-          {{ unrated ? 'UNRATED' : `PROV ${player.gamesPlayed}/10` }}
+          {{ unrated ? 'UNRATED' : `PROV ${player.gamesPlayed}/${player.provisionalGames}` }}
         </span>
       </div>
       <div class="mt-0.5 font-mono text-[11px] text-text-muted">{{ matchesLabel }}</div>

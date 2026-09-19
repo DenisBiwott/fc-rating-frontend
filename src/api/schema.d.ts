@@ -1177,6 +1177,10 @@ export interface operations {
                             isProvisional: boolean;
                         }[];
                         meanRating: number;
+                        ratingConfig: {
+                            name: string;
+                            provisionalGames: number;
+                        };
                     };
                 };
             };

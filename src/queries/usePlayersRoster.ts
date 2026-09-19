@@ -13,6 +13,8 @@ export interface RosterPlayer {
   gamesPlayed: number | null
   rating: number | null
   isProvisional: boolean | null
+  /** The active config's provisional threshold, for the "PROV n/N" badge. */
+  provisionalGames: number
   rank: number | null
 }
 
@@ -42,6 +44,7 @@ async function fetchPlayersRoster(active: boolean): Promise<RosterPlayer[]> {
       gamesPlayed: row?.gamesPlayed ?? null,
       rating: row?.rating ?? null,
       isProvisional: row?.isProvisional ?? null,
+      provisionalGames: leaderboard.ratingConfig.provisionalGames,
       rank: row?.rank ?? null,
     }
   })

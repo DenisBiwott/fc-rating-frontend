@@ -2,7 +2,8 @@
 // design-spec.md §2 "LiveSessionBanner": inset card, green hairline border, a pulsing-radius dot
 // (no animation — the box-shadow ring is static per the "nothing pulses" motion rule), elapsed
 // time in mono green.
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
+import { useNow } from '@/composables/useNow'
 import { formatElapsed } from '@/lib/elapsed'
 
 const props = defineProps<{
@@ -12,17 +13,7 @@ const props = defineProps<{
   biggestMover: { name: string; delta: number } | null
 }>()
 
-const now = ref(Date.now())
-let intervalId: ReturnType<typeof setInterval> | undefined
-
-onMounted(() => {
-  intervalId = setInterval(() => {
-    now.value = Date.now()
-  }, 60_000)
-})
-onBeforeUnmount(() => {
-  clearInterval(intervalId)
-})
+const now = useNow()
 
 const elapsed = computed(() => formatElapsed(new Date(props.startedAt), new Date(now.value)))
 

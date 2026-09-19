@@ -1,12 +1,28 @@
 <script setup lang="ts">
-// design-spec.md §4 screen anatomy: title + config/mean line + match count, live-session banner
-// (only when one is open), column header row (1a only), player rows. Rows, not cards — nothing
-// competes with the rating number.
+// design-spec.md §4 screen anatomy: title + summary line, live-session banner (only when one is
+// open), column header row (1a only), player rows. Rows, not cards — nothing competes with the
+// rating number. The summary line replaced the spec's "config · mean" line (Denis, 2026-09-19): in
+// Elo the mean sits near the baseline by construction, so it told players nothing. It says how much
+// has been played and how recently — who leads is already the first row right below it.
+import { computed } from 'vue'
+import { useNow } from '@/composables/useNow'
 import { useLeaderboard } from '@/queries/useLeaderboard'
 import LiveSessionBanner from './LiveSessionBanner.vue'
 import PlayerRow from './PlayerRow.vue'
+import { leaderboardSummary } from './summary'
 
 const { data, isPending, isError } = useLeaderboard()
+const now = useNow()
+
+const summary = computed(() =>
+  data.value
+    ? leaderboardSummary({
+        totalMatches: data.value.totalMatches,
+        lastMatchAt: data.value.lastMatchAt,
+        now: new Date(now.value),
+      })
+    : '',
+)
 </script>
 
 <template>
@@ -14,7 +30,7 @@ const { data, isPending, isError } = useLeaderboard()
     <header class="px-5 pt-6 pb-4">
       <h1 class="text-2xl font-bold tracking-[-0.02em] text-text-primary">Leaderboard</h1>
       <p v-if="data" class="mt-1 font-mono text-xs text-text-muted">
-        default-elo · mean {{ Math.round(data.meanRating) }} · {{ data.totalMatches }} matches
+        {{ summary }}
       </p>
     </header>
 
@@ -58,6 +74,7 @@ const { data, isPending, isError } = useLeaderboard()
           :form="row.form"
           :games-played="row.gamesPlayed"
           :is-provisional="row.isProvisional"
+          :provisional-games="data.ratingConfig.provisionalGames"
         />
       </TransitionGroup>
     </template>

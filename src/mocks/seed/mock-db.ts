@@ -16,6 +16,7 @@ interface PlayerState {
   losses: number
   draws: number
   form: MatchResult[]
+  lastPlayedAt: string | null
 }
 
 const players = new Map<string, PlayerState>(
@@ -35,6 +36,8 @@ const players = new Map<string, PlayerState>(
         losses: entry.losses,
         draws: entry.draws,
         form: entry.form,
+        // The seed has no match timestamps; anyone who's played is taken to have played this session.
+        lastPlayedAt: entry.gamesPlayed > 0 ? seedSession.startedAt : null,
       },
     ]
   }),
@@ -102,13 +105,23 @@ function rankedEntries() {
 export function getPlayers() {
   return [...players.values()]
     .filter((p) => p.isActive)
-    .map((p) => ({ id: p.id, name: p.name, avatarUrl: p.avatarUrl, isActive: p.isActive }))
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      avatarUrl: p.avatarUrl,
+      isActive: p.isActive,
+      lastPlayedAt: p.lastPlayedAt,
+    }))
 }
 
 export function getLeaderboardResponse() {
   const entries = rankedEntries()
   const meanRating = entries.reduce((sum, e) => sum + e.rating, 0) / entries.length
-  return { entries, meanRating }
+  return {
+    entries,
+    meanRating,
+    ratingConfig: { name: 'default-elo', provisionalGames: PROVISIONAL_GAMES },
+  }
 }
 
 export function getSessionCurrent() {
@@ -241,6 +254,8 @@ export function recordMatch(
   }
   nextSequence += 1
   matchLog.push(match)
+  home.lastPlayedAt = match.playedAt
+  away.lastPlayedAt = match.playedAt
 
   const rankAfter = new Map(rankedEntries().map((e) => [e.playerId, e.rank]))
   const rankChanges = [homeId, awayId]
