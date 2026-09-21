@@ -23,24 +23,29 @@ async function handleLogout(): Promise<void> {
 <template>
   <div
     v-if="!isPending"
-    class="flex h-8 flex-none items-center justify-end gap-2.5 border-b border-border-hairline bg-bg-nav px-4"
+    class="flex h-8 flex-none items-center justify-between gap-2.5 border-b border-border-hairline bg-bg-nav px-4"
   >
-    <RouterLink
-      v-if="!isAdmin"
-      :to="{ name: 'login' }"
-      class="font-mono text-[11px] font-semibold tracking-[0.04em] text-text-secondary"
-    >
-      Log in
-    </RouterLink>
-    <template v-else>
-      <span class="font-mono text-[11px] text-text-faint">{{ user?.name }}</span>
-      <button
-        type="button"
+    <div class="font-mono text-[11px] font-semibold tracking-[0.04em] text-text-secondary">
+      built•by•biwott
+    </div>
+    <div class="space-x-2">
+      <RouterLink
+        v-if="!isAdmin"
+        :to="{ name: 'login' }"
         class="font-mono text-[11px] font-semibold tracking-[0.04em] text-text-secondary"
-        @click="handleLogout"
       >
-        Log out
-      </button>
-    </template>
+        Log in
+      </RouterLink>
+      <template v-else>
+        <span class="font-mono text-[11px] text-text-faint">{{ user?.name }}</span>
+        <button
+          type="button"
+          class="font-mono text-[11px] font-semibold tracking-[0.04em] text-text-secondary"
+          @click="handleLogout"
+        >
+          Log out
+        </button>
+      </template>
+    </div>
   </div>
 </template>
