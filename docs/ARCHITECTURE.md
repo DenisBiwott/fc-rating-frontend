@@ -47,17 +47,24 @@ Three layouts, split at Tailwind's `sm` (640px) and `lg` (1024px), per `../DESIG
 
 Each chrome component owns its breakpoint in its own root classes (`BottomNav`/`AccountBar`:
 `lg:hidden`; `DesktopRail`: `hidden lg:flex`). `App.vue` only decides *whether* chrome shows
-(route meta, below), never *which*, so there's no JS breakpoint state yet. Add a `matchMedia`
-composable when behaviour, not just layout, first depends on width (the docked Record panel).
+(route meta, below), never *which*. JS breakpoint state exists only where *behaviour* depends on
+width: `useIsDesktop()` (`src/composables/useBreakpoint.ts`, one shared `matchMedia` for `lg`)
+and `useElementWidth()` (ResizeObserver), which the leaderboard uses to pick its desktop columns
+from the table's own width (`features/leaderboard/columns.ts`). The phone/tablet leaderboard
+list goes a step further with a CSS container query: `LeaderboardList` is an `@container`, and
+its rows switch to the tablet layout at 640px of *container* width (`@min-[640px]:`). That lets
+the same list sit in the narrow column beside the desktop Record panel (516px at 1024) as the
+compact phone rows, while phones and tablets behave exactly as with `sm:`.
 `AccountBar` and `DesktopRail` share their logic through `useAccount()`, so sign-in, log out and
 the theme toggle can't drift apart between the two.
 
 **Content width follows route meta `layout`**, the widest layout a screen has been designed for.
 `App.vue` caps the column at 600px (centred) from the next breakpoint up: `phone` (the default)
-from `sm`, `tablet` from `lg`, and `desktop` never. That way no screen stretches edge to edge
+from `sm`, `tablet` from `lg`. A `desktop` screen is only held to DESIGN-SPEC.md §6's page cap:
+1440px minus the 88px rail (1352px), centred. That way no screen stretches edge to edge
 before it has been designed to (600px is the old phone card's width; the card frame is gone).
-Turn 3 moves screens up one slice at a time. At the moment the leaderboard, players roster and
-player profile are `tablet`; record-match, login and the 404 stay `phone`. A form gains nothing
+Turn 3 moves screens up one slice at a time. At the moment the leaderboard is `desktop`, the players roster and
+player profile are `tablet`, record-match, login and the 404 stay `phone`. A form gains nothing
 from a wide column, so record-match may simply stay that way. Tablet gutters are 32px (`sm:px-8`)
 where phone gutters are 20px (`px-5`).
 
@@ -97,7 +104,13 @@ read-and-render over query data. This isn't a permanent ban — see CLAUDE.md's 
 non-negotiable for when Pinia would be a legitimate addition.
 
 The one piece of *feature* client state is the record-match form, in a single composable,
-`useRecordMatchForm`, not scattered across component refs. `composables/useTheme.ts` is a second,
+`useRecordMatchForm`, not scattered across component refs. Its desktop companion,
+`useRecordLauncher`, decides *where* the form opens. On phones and tablets that's the `/record`
+route (`?home=` pre-fills Home). On desktop it's the leaderboard's docked panel, or a right-side
+`RecordDrawer` on any other screen. The router guard sends `/record` on a desktop window to the
+panel. It holds only the drawer's open flag, a queued Home pre-fill, and a focus request.
+`RecordMatchForm` is the single form component for both homes (variant `screen` or `panel`). The
+panel variant resets itself on Done, since it outlives a single match. `composables/useTheme.ts` is a second,
 smaller piece — presentation state (which CSS class is on `<html>`), not server data, sitting
 outside the record-match form and outside TanStack Query on purpose.
 

@@ -110,6 +110,26 @@ describe('useRecordMatchForm', () => {
     expect(form.awayScore.value).toBe(0)
   })
 
+  it('reset() returns a finished form to an empty selecting state', async () => {
+    const form = mountForm()
+    form.selectPlayer('dave')
+    form.selectPlayer('stan')
+    form.setScore('home', 2)
+    form.decidedOnPenalties.value = true
+    await form.submit()
+    expect(form.state.value).toBe('result')
+
+    form.reset()
+
+    expect(form.state.value).toBe('selecting')
+    expect(form.homePlayerId.value).toBeNull()
+    expect(form.awayPlayerId.value).toBeNull()
+    expect(form.homeScore.value).toBe(0)
+    expect(form.decidedOnPenalties.value).toBe(false)
+    expect(form.lastOutcome.value).toBeNull()
+    expect(form.resultSession.value).toBeNull()
+  })
+
   it('done() reaches a terminal state', async () => {
     const form = mountForm()
     form.selectPlayer('dave')

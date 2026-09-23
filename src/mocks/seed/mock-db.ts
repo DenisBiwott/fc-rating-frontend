@@ -101,7 +101,11 @@ function rankedEntries() {
       streak: streakFromForm(p.form),
       isProvisional: p.gamesPlayed < PROVISIONAL_GAMES,
     }))
-    .sort((a, b) => (b.rating !== a.rating ? b.rating - a.rating : a.playerId.localeCompare(b.playerId)))
+    // Mirrors the backend's rankPlayers(): 0-game (unrated) players rank last regardless of rating.
+    .sort((a, b) => {
+      if ((a.gamesPlayed === 0) !== (b.gamesPlayed === 0)) return a.gamesPlayed === 0 ? 1 : -1
+      return b.rating !== a.rating ? b.rating - a.rating : a.playerId.localeCompare(b.playerId)
+    })
     .map((entry, index) => ({ rank: index + 1, ...entry }))
 }
 

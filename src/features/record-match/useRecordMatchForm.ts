@@ -163,6 +163,22 @@ export function useRecordMatchForm() {
     state.value = 'done'
   }
 
+  /** Back to an empty form with a fresh match id: the docked panel's Clear and Done, where the
+   *  form outlives a single match (the /record screen instead unmounts on Done). */
+  function reset(): void {
+    if (debounceTimer) clearTimeout(debounceTimer)
+    homePlayerId.value = null
+    awayPlayerId.value = null
+    homeScore.value = 0
+    awayScore.value = 0
+    decidedOnPenalties.value = false
+    matchId.value = uuidv7()
+    submitError.value = null
+    resultSession.value = null
+    lastOutcome.value = null
+    state.value = 'selecting'
+  }
+
   return {
     state,
     homePlayerId,
@@ -185,5 +201,6 @@ export function useRecordMatchForm() {
     submit,
     recordAnother,
     done,
+    reset,
   }
 }

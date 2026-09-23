@@ -18,6 +18,15 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
+// jsdom doesn't implement ResizeObserver either (src/composables/useElementWidth.ts). A no-op is
+// enough: components start from the element's measured width, which jsdom reports as 0.
+class NoopResizeObserver {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+Object.defineProperty(window, 'ResizeObserver', { writable: true, value: NoopResizeObserver })
+
 // docs/TESTING.md: "tests should exercise the real query hooks against mocked network responses,
 // not mock the query hooks themselves" — the same MSW handlers the real dev server uses, run
 // against Node instead of a browser Service Worker.

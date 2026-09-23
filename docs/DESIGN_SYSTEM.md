@@ -64,6 +64,8 @@ Special-purpose neutrals:
 | Token | Dark | Light | Use |
 |---|---|---|---|
 | `border-nav` | `#1f1f24` | `#e4e4e6` | BottomNav top border |
+| `bg-panel` | `#0f0f12` | `#f4f4f5` | docked Record panel / drawer |
+| `text-emphasis` | `#d4d4d8` | `#3f3f46` | desktop table W/L/D counts (between primary and secondary) |
 | `text-nav-inactive` | `#6b6b74` | `#71717a` | BottomNav inactive tab |
 | `neutral-quiet` | `#3f3f46` | `#a1a1aa` | unplayed form chip, PROV/UNRATED badge border, chart baseline label |
 | `chart-grid` | `#26262b` | `#e4e4e6` | sparkline gridlines |
@@ -116,10 +118,27 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
   is `text-nav-inactive`. Every focusable element gets the global `:focus-visible` ring: 2px
   `accent-up`, offset 2px (`main.css`).
 - **PlayerRow (leaderboard)** — phone: 1a compact ledger, with W-L-D inline after the form
-  strip. Tablet (`sm`, 3f): 66px rows, 32px gutters, 38px avatar, and W-L-D and Win% as their own
-  columns. PROV/UNRATED badges sit inline after the name at every width, so every row is the same
+  strip. Tablet (3f, container ≥ 640px): 66px rows, 32px gutters, 38px avatar, and W-L-D and
+  Win% as their own columns. PROV/UNRATED badges sit inline after the name at every width, so every row is the same
   height. Win% comes from the API's `winPct` (the optimistic update recomputes it the backend's
   way: wins ÷ games); an unrated player shows `—`, not `0%`.
+- **Desktop leaderboard table** (3a, `lg` and up) — 58px rows, 28px gutters, columns
+  `# · Player · Form · W · L · D · Win% · MP · Last · Rating (26px) · Δ`, with widths in
+  `features/leaderboard/columns.ts`. Row hover is `bg-raised`, and a click opens the profile.
+  Clicking a header sorts (one direction per column; `↓` marks the active one), and sorting resets
+  on reload. **Columns fit the table's own width, not the viewport**: as it narrows (the docked
+  Record panel), Last drops first, then MP, then W/L/D merge into W-L-D; below ~704px the tablet
+  rows take over. **Unrated players sort last on every column; provisional players sort
+  normally.** That's the backend's ranking rule (`rankPlayers`), so the default Rating sort is
+  exactly rank order. DESIGN-SPEC.md §6 says "provisional & unrated sort last", but doing that
+  would print ranks out of order (a provisional #5 below a rated #7), so this follows the
+  backend. The footer hint reads "Unrated sort last".
+- **Record panel** (3a, desktop, admins only) — 420px, `bg-panel`, left border, docked beside the
+  leaderboard. Anywhere else it's a right-side drawer (slides in; Escape or backdrop closes it).
+  "Record match" with the session name (`text-up-bright`, uppercase) and Clear. The next slot to
+  fill gets a green border and a `0 0 0 3px rgba(52,211,153,0.14)` ring. The picker is every
+  active player in 4 columns, most recent first. Confirm is pinned at the bottom, and the result
+  overlay covers only the panel. "Record with {name}" on a profile opens it with Home filled.
 - **Sheets / dialogs** — `SheetContent` is a bottom sheet on phones and a centred dialog (440px,
   fade plus a 4px rise) from `sm` up. Initial focus goes to the first focusable element unless the
   sheet handles `@open-auto-focus` (Add player focuses Name, per spec).

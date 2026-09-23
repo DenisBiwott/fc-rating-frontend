@@ -15,6 +15,8 @@ export interface LeaderboardRow {
   draws: number
   /** 0..1, from GET /leaderboard (wins / games, 0 with no games) — never recomputed for display. */
   winPct: number
+  /** From GET /players (the leaderboard has no timestamps); null = never played a non-void match. */
+  lastPlayedAt: string | null
   form: MatchResult[]
   isProvisional: boolean
   /** null = no delta for the relevant session (didn't play in it, or no session exists at all). */
@@ -102,6 +104,7 @@ async function fetchLeaderboard(): Promise<LeaderboardData> {
       losses: entry.losses,
       draws: entry.draws,
       winPct: entry.winPct,
+      lastPlayedAt: playersById.get(entry.playerId)?.lastPlayedAt ?? null,
       form: entry.form,
       isProvisional: entry.isProvisional,
       deltaSinceLastSession: deltasByPlayerId.get(entry.playerId) ?? null,
@@ -148,6 +151,8 @@ export function applyRecordedMatchOptimistically(
 ): void {
   queryClient.setQueryData(leaderboardQueryOptions.queryKey, (old: LeaderboardData | undefined) => {
     if (!old) return old
+    // The server stamps playedAt at record time, so "now" is what the refetch would say anyway.
+    const playedAt = new Date().toISOString()
 
     const updateRow = (row: LeaderboardRow, side: RecordedSide): LeaderboardRow => {
       const result: MatchResult = side.actualScore === 1 ? 'W' : side.actualScore === 0.5 ? 'D' : 'L'
@@ -165,6 +170,7 @@ export function applyRecordedMatchOptimistically(
         form: [...row.form, result].slice(-5),
         isProvisional: side.after.gamesPlayed < old.ratingConfig.provisionalGames,
         deltaSinceLastSession: side.delta,
+        lastPlayedAt: playedAt,
       }
     }
 
@@ -188,8 +194,7 @@ export function applyRecordedMatchOptimistically(
       ...old,
       rows,
       totalMatches: Math.round(rows.reduce((sum, r) => sum + r.gamesPlayed, 0) / 2),
-      // The server stamps playedAt at record time, so "now" is what the refetch would say anyway.
-      lastMatchAt: new Date().toISOString(),
+      lastMatchAt: playedAt,
     }
   })
 }

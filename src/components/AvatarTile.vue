@@ -8,8 +8,9 @@ const props = withDefaults(
   defineProps<{
     name: string
     size?: number
-    /** Size from the sm breakpoint up, when the tablet layout wants a bigger tile (3f: 38 vs 32).
-     *  Applied through CSS variables, so no JS breakpoint state is needed. */
+    /** Size once the nearest `@container` is 640px or wider, for the tablet leaderboard rows (3f:
+     *  38 vs 32). A container query, not the viewport: the same rows sit in a narrow column beside
+     *  the desktop Record panel. Applied through CSS variables, so no JS state is needed. */
     tabletSize?: number | undefined
     // `| undefined` is explicit, not redundant: with exactOptionalPropertyTypes, `medal?: T`
     // alone forbids passing a literal `undefined` (only omitting the prop is allowed) — but
@@ -37,7 +38,7 @@ const medalColor: Record<'gold' | 'silver' | 'bronze', string> = {
 
 <template>
   <span
-    class="flex h-(--av) w-(--av) flex-none items-center justify-center rounded-full border border-border-default bg-bg-control text-(length:--av-font) font-bold text-text-secondary sm:h-(--av-sm) sm:w-(--av-sm) sm:text-(length:--av-font-sm)"
+    class="flex h-(--av) w-(--av) flex-none items-center justify-center rounded-full border border-border-default bg-bg-control text-(length:--av-font) font-bold text-text-secondary @min-[640px]:h-(--av-sm) @min-[640px]:w-(--av-sm) @min-[640px]:text-(length:--av-font-sm)"
     :class="dashed ? 'border-dashed' : ''"
     :style="{
       '--av': `${size}px`,

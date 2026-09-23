@@ -10,9 +10,13 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import NavIcon from '@/components/NavIcon.vue'
 import { useAccount } from '@/composables/useAccount'
+import { useRecordLauncher } from '@/features/record-match/useRecordLauncher'
 
 const { user, isPending, isAdmin, nextTheme, toggleTheme, logOut } = useAccount()
 const route = useRoute()
+// Admins: focus the docked panel on the leaderboard, open the drawer anywhere else. Anonymous
+// visitors keep a link to /record, which the router guard turns into a login redirect.
+const { openRecord } = useRecordLauncher()
 const tableActive = computed(() => route.name === 'leaderboard')
 const playersActive = computed(() => route.name === 'players' || route.name === 'player-profile')
 
@@ -28,8 +32,9 @@ const accountClass =
   >
     <span class="font-mono text-[13px] font-bold tracking-[0.1em] text-text-primary">FC</span>
 
-    <RouterLink
-      to="/record"
+    <component
+      :is="isAdmin ? 'button' : RouterLink"
+      v-bind="isAdmin ? { type: 'button', onClick: () => openRecord() } : { to: '/record' }"
       aria-label="Record match"
       class="flex flex-col items-center gap-1.5 rounded-2xl"
       :class="isAdmin ? '' : 'opacity-40'"
@@ -42,7 +47,7 @@ const accountClass =
         +
       </span>
       <span class="text-[10px] font-bold tracking-[0.06em] text-text-up-bright" aria-hidden="true">RECORD</span>
-    </RouterLink>
+    </component>
 
     <span class="h-px w-10 bg-border-nav" aria-hidden="true" />
 

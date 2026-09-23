@@ -9,7 +9,10 @@ import { useRoute } from 'vue-router'
 import AccountBar from '@/components/AccountBar.vue'
 import BottomNav from '@/components/BottomNav.vue'
 import DesktopRail from '@/components/DesktopRail.vue'
+import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useTheme } from '@/composables/useTheme'
+import RecordDrawer from '@/features/record-match/RecordDrawer.vue'
+import { useIsAdmin } from '@/queries/useCurrentUser'
 
 // Must be called unconditionally from a component that's always instantiated. Previously relied
 // on a bare `import './composables/useTheme'` in main.ts for this side effect — that import went
@@ -20,13 +23,16 @@ import { useTheme } from '@/composables/useTheme'
 useTheme()
 
 const route = useRoute()
+const isDesktop = useIsDesktop()
+const isAdmin = useIsAdmin()
 // Neither chrome piece shows on /login or the 404 (`public`), nor on a `fullscreen` screen.
 const showNav = computed(() => !route.meta.public && !route.meta.fullscreen)
 
 const COLUMN_CAP = {
   phone: 'sm:mx-auto sm:w-full sm:max-w-150',
   tablet: 'lg:mx-auto lg:w-full lg:max-w-150',
-  desktop: '',
+  // DESIGN-SPEC.md §6: content caps at 1440 and centres. The rail (88px) sits outside the column.
+  desktop: 'mx-auto w-full max-w-[1352px]',
 } as const
 const columnCap = computed(() => COLUMN_CAP[route.meta.layout ?? 'phone'])
 </script>
@@ -42,5 +48,6 @@ const columnCap = computed(() => COLUMN_CAP[route.meta.layout ?? 'phone'])
       />
       <BottomNav v-if="showNav" class="absolute inset-x-0 bottom-0 z-10" />
     </div>
+    <RecordDrawer v-if="isDesktop && isAdmin" />
   </div>
 </template>

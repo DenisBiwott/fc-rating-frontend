@@ -20,6 +20,7 @@ function row(playerId: string, rating: number, wins: number, losses: number, dra
     losses,
     draws,
     winPct: gamesPlayed === 0 ? 0 : wins / gamesPlayed,
+    lastPlayedAt: null,
     form: [],
     isProvisional: false,
     deltaSinceLastSession: null,

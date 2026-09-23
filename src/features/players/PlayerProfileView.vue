@@ -8,6 +8,8 @@ import { useRoute, useRouter } from 'vue-router'
 import AvatarTile from '@/components/AvatarTile.vue'
 import DeltaBadge from '@/components/DeltaBadge.vue'
 import RatingNumber from '@/components/RatingNumber.vue'
+import { useIsDesktop } from '@/composables/useBreakpoint'
+import { useRecordLauncher } from '@/features/record-match/useRecordLauncher'
 import { useIsAdmin } from '@/queries/useCurrentUser'
 import { useLeaderboard } from '@/queries/useLeaderboard'
 import { usePlayerMatches } from '@/queries/usePlayerMatches'
@@ -24,6 +26,10 @@ const props = defineProps<{ id: string }>()
 
 const actionsOpen = ref(false)
 const isAdmin = useIsAdmin()
+// 3c: "Record with {name}" opens the Record drawer with this player in the Home slot. Desktop and
+// admins only; an inactive player isn't in the picker, so they get no button.
+const isDesktop = useIsDesktop()
+const { openRecord } = useRecordLauncher()
 const route = useRoute()
 const router = useRouter()
 
@@ -83,15 +89,25 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
           &lsaquo; Table
         </RouterLink>
         <span class="font-mono text-[11px] tracking-[0.1em] text-text-faint">PLAYER</span>
-        <button
-          type="button"
-          aria-label="Player actions"
-          class="flex h-8 w-8 items-center justify-center rounded-full border border-border-default bg-bg-raised text-sm text-text-secondary"
-          :class="isAdmin ? '' : 'opacity-40'"
-          @click="handleActionsClick"
-        >
-          ···
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            v-if="isAdmin && isDesktop && profile.isActive"
+            type="button"
+            class="h-9 rounded-xl border border-border-control bg-bg-raised px-3.5 text-[13px] font-semibold text-text-primary hover:bg-bg-control"
+            @click="openRecord(profile.playerId)"
+          >
+            Record with {{ profile.name }}
+          </button>
+          <button
+            type="button"
+            aria-label="Player actions"
+            class="flex h-8 w-8 items-center justify-center rounded-full border border-border-default bg-bg-raised text-sm text-text-secondary"
+            :class="isAdmin ? '' : 'opacity-40'"
+            @click="handleActionsClick"
+          >
+            ···
+          </button>
+        </div>
       </header>
 
       <div class="flex items-center gap-3.5 px-5 sm:px-8 pb-4">

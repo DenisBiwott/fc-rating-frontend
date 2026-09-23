@@ -131,6 +131,19 @@ Tablet (3f): route meta `layout` now decides when a screen's content column is c
 32px gutters from `sm`, and the leaderboard gains W-L-D/Win% columns with 66px rows. Provisional
 badges are inline, so phone rows are uniform again. Sheets are centred dialogs from `sm`. Fixed
 while here: Add player now focuses Name on open (it was focusing Cancel).
+**Slice 4 (desktop leaderboard, 3a left) done, 2026-09-23.** From `lg`, the leaderboard is the
+3a table (`LeaderboardTable`), with click-to-sort headers and columns chosen from the table's
+measured width (`columns.ts`: Last, then MP, then W/L/D merge, then the tablet rows). Unrated
+players sort last and provisional ones normally, following the backend's ranking rather than the
+spec's wording (docs/DESIGN_SYSTEM.md). `lastPlayedAt` is now on leaderboard rows, and the page
+caps at 1440. The mock db now ranks unrated players last like the backend does.
+**Slice 5 (docked Record panel, 3a right) done, 2026-09-23.** `RecordMatchForm` (variants
+`screen`/`panel`) was extracted from `RecordMatchView`. On desktop, admins get a 420px panel docked
+beside the leaderboard (anonymous visitors don't); other screens open it as a right-side drawer
+from the rail's Record button or a profile's "Record with {name}". `/record` on a desktop window
+redirects to the panel, carrying `?home=`. The phone/tablet list now switches layout on its
+*container* width, so it fits beside the panel at 1024px (docs/ARCHITECTURE.md). Result-in-panel
+polish, FLIP tints and Undo are Slice 6.
 Build order otherwise lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The product design and
 pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — a
@@ -158,10 +171,15 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   one — not a permanent ban. If a genuine cross-cutting client-state need emerges that a composable
   can't reasonably express, Pinia (not Vuex — Pinia is Vue's current recommendation) is a legitimate
   addition; that's an architecture decision worth a line in this file, not a silent dependency add.
+  **Decided 2026-09-23 (Turn 3):** a second, small piece of client state, `useRecordLauncher`
+  (`src/features/record-match/`), holds where the record form opens on desktop: drawer open, a
+  queued Home pre-fill, and a focus request. It's module-level so the router guard, the rail, a
+  profile and the panel share it. A composable, still no Pinia.
 - **The record-match flow is one scrolling card** — no wizard, no modal, no login inside it. Tap
   Home/Away slots to fill from a recently-played grid, two score steppers, a debounced (150ms)
   preview line, a full-width Confirm using a client-generated UUID v7 reused verbatim on retry
-  (idempotent against the backend).
+  (idempotent against the backend). One component, `RecordMatchForm`, serves both places it lives:
+  the full-screen `/record` route (phones/tablets) and the desktop docked panel/drawer.
 - **Two accent hues, full stop**: green for positive, coral for negative, plus gold/silver/bronze
   for ranks 1–3 only. Ratings are the largest text on the leaderboard — nothing competes with
   them. All ratings/scores/deltas/records are tabular mono
