@@ -16,6 +16,7 @@ interface PlayerState {
   losses: number
   draws: number
   form: MatchResult[]
+  createdAt: string
   lastPlayedAt: string | null
 }
 
@@ -36,6 +37,8 @@ const players = new Map<string, PlayerState>(
         losses: entry.losses,
         draws: entry.draws,
         form: entry.form,
+        // The seed has no join dates either; everyone is taken to have joined before this session.
+        createdAt: seedSession.startedAt,
         // The seed has no match timestamps; anyone who's played is taken to have played this session.
         lastPlayedAt: entry.gamesPlayed > 0 ? seedSession.startedAt : null,
       },
@@ -110,6 +113,7 @@ export function getPlayers() {
       name: p.name,
       avatarUrl: p.avatarUrl,
       isActive: p.isActive,
+      createdAt: p.createdAt,
       lastPlayedAt: p.lastPlayedAt,
     }))
 }
@@ -150,7 +154,9 @@ export function getSessionSummary(id: string) {
 /** Only identity/order matter here — the frontend derives "recently played" from this, not the
  *  scores or timestamps. */
 export function getRecentMatches(limit: number) {
-  const real = [...matchLog].sort((a, b) => b.sequence - a.sequence)
+  const real = [...matchLog]
+    .sort((a, b) => b.sequence - a.sequence)
+    .map((m) => ({ ...m, isVoid: false, outcome: recordedById.get(m.id)?.outcome ?? null }))
   const seeded = recentlyPlayedOrder
     .filter((id) => !real.some((m) => m.homePlayerId === id || m.awayPlayerId === id))
     .map((playerId, index) => ({
@@ -164,6 +170,8 @@ export function getRecentMatches(limit: number) {
       playedAt: new Date(Date.now() - (index + 1) * 3_600_000).toISOString(),
       sessionId: null,
       recordedBy: 'mock-admin',
+      // No recorded history to reconstruct a seeded match's outcome from.
+      outcome: null,
     }))
   return [...real, ...seeded].slice(0, limit)
 }

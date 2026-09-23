@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md's ScoreStepper spec: one card, [-][value][+] per side, value tappable to type,
+// DESIGN-SPEC.md's ScoreStepper spec: one card, [-][value][+] per side, value tappable to type,
 // range 0-20 (enforced by the composable's incrementScore/decrementScore/setScore).
 import { ref } from 'vue'
 

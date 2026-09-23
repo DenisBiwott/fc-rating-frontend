@@ -53,7 +53,7 @@ export function useRecordMatchForm() {
 
   function selectPlayer(playerId: string): void {
     if (state.value !== 'selecting') return
-    // Already-selected grid tiles are inert (design-spec.md's PlayerGrid spec) — clearing a slot
+    // Already-selected grid tiles are inert (DESIGN-SPEC.md's PlayerGrid spec) — clearing a slot
     // happens by tapping the slot itself, not by tapping the grid tile again.
     if (homePlayerId.value === playerId || awayPlayerId.value === playerId) return
     if (homePlayerId.value === null) {

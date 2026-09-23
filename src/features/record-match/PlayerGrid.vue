@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md's PlayerGrid spec: 5-column grid, already-selected tiles inert at 35% opacity.
+// DESIGN-SPEC.md's PlayerGrid spec: 5-column grid, already-selected tiles inert at 35% opacity.
 import AvatarTile from '@/components/AvatarTile.vue'
 
 defineProps<{

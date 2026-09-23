@@ -107,10 +107,34 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Not yet done: the actual Netlify s
 setting Cloud Run's `CORS_ORIGIN` to the final Netlify URL, and end-to-end verification in a real
 browser. Phase 7 (admin — rating-config viewer/rebuild button) is real remaining work but wasn't
 asked for before the hosting push; revisit after hosting is verified live.
+**Turn 3 (desktop & tablet) started 2026-09-23 — Slice 0 done.** Built from the canvas's Turn 3
+(`../FC Rating UI.dc.html`, 3a–3f) and `../DESIGN-SPEC.md` §6, as sequential slices (shell → tablet
+→ desktop table → docked Record panel → result/FLIP/Undo → keyboard → profile → roster → TV).
+Slice 0: contract synced for the backend's two additions (`createdAt` on `GET /players`, nullable
+`outcome` on `GET /matches` items), mocks updated to match. Also: the theme toggle moved from
+`AdminView` (admin-only) to `AccountBar`, and the default is now always dark rather than following
+`prefers-color-scheme`; `index.html` ships `class="dark"` so the default paints before JS runs.
+**Slice 1 (mobile fixes) done, 2026-09-23.** Every hard-coded colour in components is now a theme
+token (docs/DESIGN_SYSTEM.md#theming), which fixed a light-mode result screen that was unreadable
+(see Scars). `/record` is `fullscreen` (no AccountBar/BottomNav) with Confirm pinned in a footer.
+Verified in Chrome at 390×844 and 390×600 against MSW, in both themes. On a draw, both result
+cards now get a neutral grey wash instead of both reading as losers.
+**Slice 2 (responsive shell) done, 2026-09-23.** The phone card is gone. `DesktopRail` (lg+)
+replaces `AccountBar` + `BottomNav`, the nav gets Turn 3's icons, the tablet nav is centred, and
+there's a global focus-visible ring. Content stays a 600px centred column from sm up until each
+screen's own slice (docs/ARCHITECTURE.md#responsive-shell). `useAccount()` is shared by
+`AccountBar` and the rail. TV sits inert in the rail until its slice.
+**Light-mode green text + Slice 3 (tablet) done, 2026-09-23.** Green *text* uses new `text-up*`
+tokens, darker in light mode (measured 1.3–1.8:1 before, ≥4.5:1 after). Fills keep the accent.
+Tablet (3f): route meta `layout` now decides when a screen's content column is capped
+(docs/ARCHITECTURE.md#responsive-shell). Leaderboard, roster and profile are full width with
+32px gutters from `sm`, and the leaderboard gains W-L-D/Win% columns with 66px rows. Provisional
+badges are inline, so phone rows are uniform again. Sheets are centred dialogs from `sm`. Fixed
+while here: Add player now focuses Name on open (it was focusing Cancel).
 Build order otherwise lives in
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
-lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
-(one directory up, outside this repo — planning documents, not committed here). This repo's docs
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The product design and
+pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — a
+planning document, not committed here). This repo's docs
 distill the sections that govern it; if the two ever disagree, treat that as a bug in this repo's
 docs, not a decision to quietly follow one side.
 
@@ -144,6 +168,13 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   (`font-variant-numeric: tabular-nums`); color is never the only signal (form strip uses `W`/`L`/
   `D` letters, deltas use `+`/`−`). Every tap target is ≥ 44px. Full detail in
   [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
+- **Every colour works in both themes.** Dark is the default, light is opt-in via the toggle in
+  `AccountBar` / `DesktopRail`. Components use theme tokens only, never a hard-coded neutral hex/rgb. A mode-dependent
+  colour gets a token defined in both `:root` and `.dark` in `src/styles/main.css`. Only the
+  accents, medals and alpha tints are mode-independent, except that green *text* uses `text-up*`
+  (darker in light mode for contrast), never `text-accent-up*`. A new or changed screen isn't done until
+  it has been looked at in both themes. Full rules and the token table:
+  [docs/DESIGN_SYSTEM.md#theming](docs/DESIGN_SYSTEM.md#theming).
 - Do **not** introduce: Vuex, Axios, hand-written API types, any UI kit besides shadcn-vue, or
   Nuxt. (Pinia is not on this list — see the state-management non-negotiable above.)
 
@@ -191,8 +222,8 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   instead — most visibly a fixed-height button collapsing to a fraction of its declared height.
   Swapping to `min-h-full` looked like the fix (fills-when-short is preserved, squish is gone), but
   a floor has no ceiling either: the root just grows to fit *all* its content with nothing capping
-  it, so it never overflows *itself* — the excess is then silently clipped by the outer phone-card's
-  `overflow-hidden`, invisible and unscrollable, which is worse than squishing. The actual fix is
+  it, so it never overflows *itself* — the excess is then silently clipped by the outer shell's
+  `overflow-hidden` main column, invisible and unscrollable, which is worse than squishing. The actual fix is
   `h-full` (a hard 100%, fills when short, caps when tall) *plus* `*:shrink-0` on that same root —
   because once its height is capped, its own direct children are ordinary flex items with the CSS
   default `flex-shrink: 1`, so the identical squish bug recurses one level down onto the view's own
@@ -209,6 +240,14 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   `useRecordMatchForm` that only updates when `preview.data` actually resolves, never resetting on
   a new call, with `PreviewLine` rendering a same-height skeleton before the first-ever result so
   even that initial reveal doesn't move anything.
+
+- **A hard-coded surface under token-coloured text goes invisible in the other theme.**
+  `ResultOverlay` hard-coded its canvas as `#08110c` (the spec's green-cast black) while its
+  score, names and ratings used `text-text-primary`. The token flipped to `#0c0c0e` in light mode
+  and the background didn't, so the result screen, the product's payoff moment, rendered
+  near-black on near-black. It went unnoticed because the app had only ever been checked in dark
+  mode. Fixed by moving every mode-dependent colour onto tokens (docs/DESIGN_SYSTEM.md#theming).
+  The lesson: a surface and the text on it must both be tokens, or both be fixed. Never mix.
 
 ## Scope boundaries
 

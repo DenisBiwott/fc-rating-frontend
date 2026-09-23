@@ -53,7 +53,7 @@ async function confirmVoid(): Promise<void> {
             {{ Math.round(player.ratingBefore) }} &rarr;
             <span
               class="font-semibold"
-              :class="player.ratingAfter >= player.ratingBefore ? 'text-accent-up-bright' : 'text-accent-down'"
+              :class="player.ratingAfter >= player.ratingBefore ? 'text-text-up-bright' : 'text-accent-down'"
             >
               {{ Math.round(player.ratingAfter) }}
             </span>

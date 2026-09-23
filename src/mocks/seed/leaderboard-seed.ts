@@ -1,9 +1,9 @@
-// Deterministic mock data — design-spec.md's own "Mock data (use verbatim for seeds and MSW)"
+// Deterministic mock data — DESIGN-SPEC.md's own "Mock data (use verbatim for seeds and MSW)"
 // table, §6. Per-player fields are derived here (gamesPlayed, winPct, streak, isProvisional)
 // rather than hand-typed, mirroring how fc-rating-backend actually computes them
 // (src/domain/leaderboard/compute.ts) so a mismatch shows up as a wrong number, not a typo.
 //
-// design-spec.md's own "142 matches total" doesn't reconcile with its per-player W-L-D rows
+// DESIGN-SPEC.md's own "142 matches total" doesn't reconcile with its per-player W-L-D rows
 // (they sum to 215 player-games, i.e. ~108 matches) — this is a pre-existing inconsistency in the
 // design doc's example data, not something reproduced here. The leaderboard screen derives its
 // displayed match count from gamesPlayed sums instead of hardcoding either figure.
@@ -91,7 +91,7 @@ export const seedLeaderboardEntries: SeedLeaderboardEntry[] = RAW.map((p, index)
   }
 })
 
-export const seedMeanRating = 1204 // design-spec.md's stated figure — a server-computed aggregate, not derived here
+export const seedMeanRating = 1204 // DESIGN-SPEC.md's stated figure — a server-computed aggregate, not derived here
 
 export const seedSession = {
   id: 'friday-night-fc',
@@ -100,7 +100,7 @@ export const seedSession = {
   endedAt: null as string | null,
   createdBy: 'mock-admin',
   matchCount: 9,
-  // design-spec.md names Ras (+31) as this session's biggest mover, even though Vin's own
+  // DESIGN-SPEC.md names Ras (+31) as this session's biggest mover, even though Vin's own
   // leaderboard-row delta (+40, part of `playerDeltas` below since every non-"—" player in the
   // mock table gets one) is arithmetically bigger — Vin is PROV 4/10, so read his +40 as a swing
   // from whatever session he last actually played, not necessarily this one. This mock's

@@ -13,14 +13,11 @@ function readStoredTheme(): Theme | null {
   }
 }
 
-function systemPrefersLight(): boolean {
-  return window.matchMedia('(prefers-color-scheme: light)').matches
-}
-
-// Dark by default; a stored choice wins, otherwise an explicit system preference for light is
-// respected on first load (docs/DEVELOPMENT.md: "dark-by-default ... respects
-// prefers-color-scheme on first load").
-const theme = ref<Theme>(readStoredTheme() ?? (systemPrefersLight() ? 'light' : 'dark'))
+// Dark by default, including for a first-time visitor whose system prefers light — Denis's call
+// (2026-09-23), replacing the earlier "respect prefers-color-scheme on first load" behaviour. Only
+// an explicit choice via the toggle switches to light, and that choice is remembered. index.html
+// ships `<html class="dark">` so the default paints before this module has even run.
+const theme = ref<Theme>(readStoredTheme() ?? 'dark')
 
 watchEffect(() => {
   document.documentElement.classList.toggle('dark', theme.value === 'dark')

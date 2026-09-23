@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// Bottom sheet chrome shared by 2c (add player) and 2d (player actions) — FC Rating UI.dc.html.
+// Bottom sheet on phones, centred dialog from sm up (DESIGN-SPEC.md §6: "Sheets become centred
+// dialogs") — shared by 2c (add player), 2d (player actions) and 2e (void match).
 // Built on reka-ui's Dialog primitive (already a dependency, `components/ui/` per
 // docs/ARCHITECTURE.md is "shadcn-vue, pulled in per-component as screens need them"): free focus
 // trap, Escape-to-close, and backdrop-click-to-close, which the record-match flow's hand-rolled
@@ -8,6 +9,9 @@ import { DialogContent, DialogOverlay, DialogPortal, DialogTitle, VisuallyHidden
 import { cn } from '@/lib/utils'
 
 defineProps<{ title: string; class?: string }>()
+// reka focuses the first focusable element on open (often a Cancel button). A sheet whose spec
+// names a different initial focus handles this: preventDefault(), then focus its own element.
+const emit = defineEmits<{ openAutoFocus: [event: Event] }>()
 </script>
 
 <template>
@@ -18,15 +22,17 @@ defineProps<{ title: string; class?: string }>()
     <DialogContent
       :class="
         cn(
-          // inset-x-0 + mx-auto + max-w-150 centers this within the viewport at the same width as
-          // App.vue's phone card (sm:max-w-150) — below sm it's still edge-to-edge, matching the
-          // card being the viewport there too.
-          'fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] translate-y-full flex-col gap-4 rounded-t-3xl border-t border-border-default bg-bg-raised px-5 pt-3 pb-7 shadow-[0_-24px_60px_-20px_rgba(0,0,0,0.85)] transition-transform duration-200 ease-out data-[state=open]:translate-y-0 focus:outline-none sm:mx-auto sm:max-w-150',
+          // Phone: edge-to-edge sheet sliding up from the bottom.
+          'fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] translate-y-full flex-col gap-4 rounded-t-3xl border-t border-border-default bg-bg-raised px-5 pt-3 pb-7 shadow-[0_-24px_60px_-20px_rgba(0,0,0,0.85)] transition-[translate,opacity] duration-200 ease-out data-[state=open]:translate-y-0 focus:outline-none',
+          // sm+: centred by inset-0 + m-auto + h-fit (no transform), which leaves translate free
+          // for DESIGN-SPEC.md §3's overlay entrance — fade + a 4px rise.
+          'sm:inset-0 sm:m-auto sm:h-fit sm:w-[calc(100%-4rem)] sm:max-w-110 sm:translate-y-1 sm:rounded-3xl sm:border sm:p-6 sm:opacity-0 sm:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.85)] sm:data-[state=open]:translate-y-0 sm:data-[state=open]:opacity-100',
           $props.class,
         )
       "
+      @open-auto-focus="emit('openAutoFocus', $event)"
     >
-      <span class="mx-auto h-1 w-10 flex-none rounded-full bg-border-control" aria-hidden="true" />
+      <span class="mx-auto h-1 w-10 flex-none rounded-full bg-border-control sm:hidden" aria-hidden="true" />
       <VisuallyHidden as-child>
         <DialogTitle>{{ title }}</DialogTitle>
       </VisuallyHidden>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md §4 screen anatomy: title + summary line, live-session banner (only when one is
+// DESIGN-SPEC.md §4 screen anatomy: title + summary line, live-session banner (only when one is
 // open), column header row (1a only), player rows. Rows, not cards — nothing competes with the
 // rating number. The summary line replaced the spec's "config · mean" line (Denis, 2026-09-19): in
 // Elo the mean sits near the baseline by construction, so it told players nothing. It says how much
@@ -27,8 +27,8 @@ const summary = computed(() =>
 
 <template>
   <section class="flex h-full flex-none flex-col pb-6 *:shrink-0">
-    <header class="px-5 pt-6 pb-4">
-      <h1 class="text-2xl font-bold tracking-[-0.02em] text-text-primary">Leaderboard</h1>
+    <header class="px-5 pt-6 pb-4 sm:px-8 sm:pt-8.5">
+      <h1 class="text-2xl font-bold tracking-[-0.02em] text-text-primary sm:text-[30px]">Leaderboard</h1>
       <p v-if="data" class="mt-1 font-mono text-xs text-text-muted">
         {{ summary }}
       </p>
@@ -50,13 +50,15 @@ const summary = computed(() =>
     </div>
     <template v-else-if="data">
       <div
-        class="flex items-center gap-2.75 px-5 pb-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-text-faint uppercase"
+        class="flex items-center gap-2.75 px-5 pb-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-text-faint uppercase sm:gap-3 sm:px-8 sm:tracking-[0.1em]"
       >
-        <span class="w-3.75 flex-none text-right">#</span>
-        <span class="w-8 flex-none" />
+        <span class="w-3.75 flex-none text-right sm:w-[22px] sm:text-left">#</span>
+        <span class="w-8 flex-none sm:w-[38px]" />
         <span class="flex-1">Player</span>
-        <span class="w-15.5 flex-none text-right">Rating</span>
-        <span class="w-10 flex-none text-right">Δ</span>
+        <span class="hidden w-[84px] flex-none text-right sm:block">W-L-D</span>
+        <span class="hidden w-[58px] flex-none text-right sm:block">Win%</span>
+        <span class="w-15.5 flex-none text-right sm:w-[78px]">Rating</span>
+        <span class="w-10 flex-none text-right sm:w-11">Δ</span>
       </div>
 
       <TransitionGroup tag="div" name="row">
@@ -69,6 +71,7 @@ const summary = computed(() =>
           :wins="row.wins"
           :losses="row.losses"
           :draws="row.draws"
+          :win-pct="row.winPct"
           :rating="row.rating"
           :delta="row.deltaSinceLastSession"
           :form="row.form"
@@ -82,7 +85,7 @@ const summary = computed(() =>
 </template>
 
 <style scoped>
-/* FLIP row reorder (design-spec.md's Motion §3.2) — Vue's TransitionGroup handles the
+/* FLIP row reorder (DESIGN-SPEC.md's Motion §3.2) — Vue's TransitionGroup handles the
    measure/invert/play mechanics; this is just the "play" transition. */
 .row-move {
   transition: transform 300ms ease;

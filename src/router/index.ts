@@ -8,6 +8,13 @@ declare module 'vue-router' {
     public?: boolean
     /** Requires a logged-in session. Unset routes are public reads. */
     requiresAuth?: boolean
+    /** Hides the shell chrome (AccountBar + BottomNav) on a real app screen that needs the whole
+     *  viewport — record-match, so the nav's green Record FAB can't compete with Confirm. */
+    fullscreen?: boolean
+    /** The widest layout this screen has been designed for (Turn 3 lands one screen at a time).
+     *  App.vue caps the content column to 600px from the next breakpoint up: `phone` (default)
+     *  caps from sm, `tablet` from lg, `desktop` never. See docs/ARCHITECTURE.md#responsive-shell. */
+    layout?: 'phone' | 'tablet' | 'desktop'
   }
 }
 
@@ -18,23 +25,26 @@ const router = createRouter({
       path: '/',
       name: 'leaderboard',
       component: () => import('@/features/leaderboard/LeaderboardView.vue'),
+      meta: { layout: 'tablet' },
     },
     {
       path: '/record',
       name: 'record-match',
       component: () => import('@/features/record-match/RecordMatchView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, fullscreen: true },
     },
     {
       path: '/players',
       name: 'players',
       component: () => import('@/features/players/PlayersView.vue'),
+      meta: { layout: 'tablet' },
     },
     {
       path: '/players/:id',
       name: 'player-profile',
       component: () => import('@/features/players/PlayerProfileView.vue'),
       props: true,
+      meta: { layout: 'tablet' },
     },
     {
       path: '/matches',

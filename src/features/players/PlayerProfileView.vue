@@ -78,7 +78,7 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
 <template>
   <section class="flex h-full flex-none flex-col *:shrink-0">
     <template v-if="profile">
-      <header class="flex items-center justify-between px-5 pt-3.5 pb-2">
+      <header class="flex items-center justify-between px-5 sm:px-8 pt-3.5 pb-2">
         <RouterLink :to="{ name: 'leaderboard' }" class="text-[15px] text-text-secondary">
           &lsaquo; Table
         </RouterLink>
@@ -94,7 +94,7 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
         </button>
       </header>
 
-      <div class="flex items-center gap-3.5 px-5 pb-4">
+      <div class="flex items-center gap-3.5 px-5 sm:px-8 pb-4">
         <AvatarTile :name="profile.name" :size="60" :medal="medal" />
         <div class="min-w-0 flex-1">
           <div
@@ -121,7 +121,7 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
 
       <RatingSparkline :history="history ?? []" />
 
-      <div class="grid grid-cols-3 gap-2 px-5 pb-3.5">
+      <div class="grid grid-cols-3 gap-2 px-5 sm:px-8 pb-3.5">
         <ProfileStatCard
           label="RECORD"
           :value="`${profile.wins}-${profile.losses}-${profile.draws}`"
@@ -130,7 +130,7 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
             profile.gamesPlayed === 0
               ? 'text-text-muted'
               : winPct > 50
-                ? 'text-accent-up'
+                ? 'text-text-up'
                 : winPct < 50
                   ? 'text-accent-down'
                   : 'text-text-muted'
@@ -141,7 +141,7 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
           :value="profile.streak ? `${profile.streak.length} ${profile.streak.result}` : '—'"
           :value-class="
             profile.streak?.result === 'W'
-              ? 'text-accent-up-bright'
+              ? 'text-text-up-bright'
               : profile.streak?.result === 'L'
                 ? 'text-accent-down'
                 : 'text-text-primary'
@@ -152,16 +152,16 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
           label="GOALS"
           :value="`${profile.goalsFor}:${profile.goalsAgainst}`"
           :sub-label="goalDiff === 0 ? 'even' : `${goalDiff > 0 ? '+' : ''}${goalDiff} diff`"
-          :sub-label-class="goalDiff > 0 ? 'text-accent-up' : goalDiff < 0 ? 'text-accent-down' : 'text-text-muted'"
+          :sub-label-class="goalDiff > 0 ? 'text-text-up' : goalDiff < 0 ? 'text-accent-down' : 'text-text-muted'"
         />
       </div>
 
-      <div class="flex items-center justify-between px-5 pb-2">
+      <div class="flex items-center justify-between px-5 sm:px-8 pb-2">
         <span class="font-mono text-[10px] tracking-[0.14em] text-text-faint">MATCHES · NEWEST FIRST</span>
         <span class="font-mono text-[10px] text-text-faint">{{ profile.gamesPlayed }}</span>
       </div>
 
-      <div v-if="!matchesPending && matches?.length === 0" class="px-5 pb-6 font-mono text-xs text-text-muted">
+      <div v-if="!matchesPending && matches?.length === 0" class="px-5 sm:px-8 pb-6 font-mono text-xs text-text-muted">
         No matches yet.
       </div>
       <ProfileMatchRow
@@ -172,8 +172,8 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
       />
     </template>
 
-    <p v-else-if="profilePending" class="p-5 font-mono text-sm text-text-muted">Loading…</p>
-    <p v-else class="p-5 font-mono text-sm text-text-muted">Player not found.</p>
+    <p v-else-if="profilePending" class="p-5 font-mono text-sm text-text-muted sm:px-8">Loading…</p>
+    <p v-else class="p-5 font-mono text-sm text-text-muted sm:px-8">Player not found.</p>
 
     <!-- Kept inside this single root element deliberately: a second root node here would disable
          Vue's automatic attrs fallthrough, silently dropping the overflow-y-auto/flex-1 classes

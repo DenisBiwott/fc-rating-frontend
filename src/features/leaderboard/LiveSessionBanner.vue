@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md §2 "LiveSessionBanner": inset card, green hairline border, a pulsing-radius dot
+// DESIGN-SPEC.md §2 "LiveSessionBanner": inset card, green hairline border, a pulsing-radius dot
 // (no animation — the box-shadow ring is static per the "nothing pulses" motion rule), elapsed
 // time in mono green.
 import { computed } from 'vue'
@@ -29,7 +29,7 @@ const biggestMoverDelta = computed(() => {
 
 <template>
   <div
-    class="mx-5 mb-3 flex items-center gap-3 rounded-xl border p-4"
+    class="mx-5 sm:mx-8 mb-3 flex items-center gap-3 rounded-xl border p-4"
     style="
       background: linear-gradient(90deg, rgba(52, 211, 153, 0.1), rgba(52, 211, 153, 0.02));
       border-color: rgba(52, 211, 153, 0.3);
@@ -47,6 +47,6 @@ const biggestMoverDelta = computed(() => {
         >
       </div>
     </div>
-    <span class="flex-none font-mono text-xs text-accent-up">{{ elapsed }}</span>
+    <span class="flex-none font-mono text-xs text-text-up">{{ elapsed }}</span>
   </div>
 </template>

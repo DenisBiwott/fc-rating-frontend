@@ -1,12 +1,14 @@
 <script setup lang="ts">
-// Desktop treatment: above `sm`, the mobile layout is contained in a fixed-width "phone card"
-// (design-spec.md's Geometry section already has a `phone frame 34` radius token, even though
-// neither design doc ever describes a wider viewport) rather than stretching edge to edge.
-// Below `sm`, this is unchanged from the original edge-to-edge mobile layout.
+// The shell (docs/ARCHITECTURE.md#responsive-shell). Below lg: AccountBar on top, BottomNav pinned
+// to the bottom. At lg and up: DesktopRail on the left instead. Each chrome component owns its own
+// breakpoint (lg:hidden / hidden lg:flex), so this file only decides *whether* chrome shows (route
+// meta), never *which*. The content column is capped at 600px and centred from the breakpoint
+// above the widest layout the screen was designed for (route meta `layout`).
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AccountBar from '@/components/AccountBar.vue'
 import BottomNav from '@/components/BottomNav.vue'
+import DesktopRail from '@/components/DesktopRail.vue'
 import { useTheme } from '@/composables/useTheme'
 
 // Must be called unconditionally from a component that's always instantiated. Previously relied
@@ -18,16 +20,26 @@ import { useTheme } from '@/composables/useTheme'
 useTheme()
 
 const route = useRoute()
-const showNav = computed(() => !route.meta.public)
+// Neither chrome piece shows on /login or the 404 (`public`), nor on a `fullscreen` screen.
+const showNav = computed(() => !route.meta.public && !route.meta.fullscreen)
+
+const COLUMN_CAP = {
+  phone: 'sm:mx-auto sm:w-full sm:max-w-150',
+  tablet: 'lg:mx-auto lg:w-full lg:max-w-150',
+  desktop: '',
+} as const
+const columnCap = computed(() => COLUMN_CAP[route.meta.layout ?? 'phone'])
 </script>
 
 <template>
-  <div class="flex min-h-dvh items-center justify-center bg-bg-canvas sm:bg-bg-nav sm:p-6">
-    <div
-      class="relative flex h-dvh w-full flex-col overflow-hidden bg-bg-canvas sm:h-[calc(100dvh-3rem)] sm:max-w-150 sm:rounded-[34px] sm:border sm:border-border-default sm:shadow-2xl"
-    >
+  <div class="flex h-dvh bg-bg-canvas">
+    <DesktopRail v-if="showNav" />
+    <div class="relative flex min-w-0 flex-1 flex-col overflow-hidden">
       <AccountBar v-if="showNav" />
-      <RouterView class="flex flex-1 flex-col overflow-y-auto" :class="showNav ? 'pb-24' : ''" />
+      <RouterView
+        class="flex flex-1 flex-col overflow-y-auto"
+        :class="[columnCap, showNav ? 'pb-24 lg:pb-0' : '']"
+      />
       <BottomNav v-if="showNav" class="absolute inset-x-0 bottom-0 z-10" />
     </div>
   </div>

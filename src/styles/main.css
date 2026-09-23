@@ -6,9 +6,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Light theme — an inversion of the dark palette below per design-spec.md §1.1
+  /* Light theme — an inversion of the dark palette below per DESIGN-SPEC.md §1.1
      ("invert the three surfaces and the four text steps; keep all accents and medals
-     unchanged"). Provisional until Phase 1 exercises the toggle visually. */
+     unchanged"). Every mode-dependent colour lives here and in .dark — components never hard-code
+     a neutral hex. See docs/DESIGN_SYSTEM.md#theming. */
   --bg-canvas: #fafafa;
   --bg-raised: #f2f2f3;
   --bg-control: #e8e8ea;
@@ -20,10 +21,32 @@
   --text-secondary: #52525b;
   --text-muted: #71717a;
   --text-faint: #a1a1aa;
+
+  /* Special-purpose neutrals — light counterparts of the dark values below, which are the spec's
+     own hex values verbatim. */
+  --border-nav: #e4e4e6;
+  --text-nav-inactive: #71717a;
+  --neutral-quiet: #a1a1aa;
+  --chart-grid: #e4e4e6;
+  --preview-bar-home: #8795a8;
+  --preview-bar-away: #c3cad4;
+
+  /* Result canvas — DESIGN-SPEC.md §1.1's one tinted canvas, inverted to a green-cast off-white. */
+  --bg-result: #eef6f0;
+  --text-result-meta: #4f6157;
+  --text-result-faint: #5f7167;
+  --border-result-secondary: #c3d3c9;
+  --text-result-secondary: #27272a;
+
+  /* Green *text* — the fills keep the spec's accent in both themes, but the accent as small text on
+     a light surface measured 1.3–1.8:1 contrast. This darker green of the same hue clears 4.5:1 on
+     every light surface it sits on, including the green form chip (docs/DESIGN_SYSTEM.md#theming). */
+  --text-up: oklch(0.5 0.15 148);
+  --text-up-bright: oklch(0.5 0.15 148);
 }
 
 .dark {
-  /* Dark theme (default) — verbatim from design-spec.md §1.1. */
+  /* Dark theme (default) — verbatim from DESIGN-SPEC.md §1.1. */
   --bg-canvas: #0c0c0e;
   --bg-raised: #131317;
   --bg-control: #18181c;
@@ -35,6 +58,22 @@
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
   --text-faint: #52525b;
+
+  --border-nav: #1f1f24; /* BottomNav top border */
+  --text-nav-inactive: #6b6b74; /* BottomNav inactive tab */
+  --neutral-quiet: #3f3f46; /* unplayed form chip, PROV/UNRATED badge border, chart baseline label */
+  --chart-grid: #26262b;
+  --preview-bar-home: #4a5568; /* PreviewLine split bar — neutral greys, not the accents */
+  --preview-bar-away: #2f3947;
+
+  --bg-result: #08110c;
+  --text-result-meta: #8b9a91;
+  --text-result-faint: #6b7c72;
+  --border-result-secondary: #2e3a34;
+  --text-result-secondary: #d4d4d8;
+
+  --text-up: oklch(0.78 0.19 148); /* = accent-up */
+  --text-up-bright: oklch(0.82 0.17 148); /* = accent-up-bright */
 }
 
 @theme inline {
@@ -53,6 +92,19 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
   --color-text-faint: var(--text-faint);
+  --color-border-nav: var(--border-nav);
+  --color-text-nav-inactive: var(--text-nav-inactive);
+  --color-neutral-quiet: var(--neutral-quiet);
+  --color-chart-grid: var(--chart-grid);
+  --color-preview-bar-home: var(--preview-bar-home);
+  --color-preview-bar-away: var(--preview-bar-away);
+  --color-bg-result: var(--bg-result);
+  --color-text-result-meta: var(--text-result-meta);
+  --color-text-result-faint: var(--text-result-faint);
+  --color-border-result-secondary: var(--border-result-secondary);
+  --color-text-result-secondary: var(--text-result-secondary);
+  --color-text-up: var(--text-up);
+  --color-text-up-bright: var(--text-up-bright);
 
   /* Accents — exactly two, plus medals for ranks 1–3. Mode-independent. */
   --color-accent-up: oklch(0.78 0.19 148);
@@ -63,6 +115,16 @@
   --color-medal-gold: #e0b64a;
   --color-medal-silver: #b9bec6;
   --color-medal-bronze: #b07a4a;
+}
+
+/* DESIGN-SPEC.md §6 "Hover / focus": a 2px accent-up ring, offset 2px, on every interactive element
+   reached by keyboard. Base layer, so a component's own focus treatment (inputs' green border)
+   still wins where it sets one. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-accent-up);
+    outline-offset: 2px;
+  }
 }
 
 body {

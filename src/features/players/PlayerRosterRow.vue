@@ -38,7 +38,7 @@ const matchesLabel = computed(() =>
 <template>
   <RouterLink
     :to="{ name: 'player-profile', params: { id: player.id } }"
-    class="flex items-center gap-3 border-t border-border-hairline px-5 py-2.75"
+    class="flex items-center gap-3 border-t border-border-hairline px-5 sm:px-8 py-2.75"
   >
     <AvatarTile :name="player.name" :size="38" :medal="medal" :dashed="unrated" />
     <div class="min-w-0 flex-1">

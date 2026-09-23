@@ -9,8 +9,8 @@ Vitest + Vue Test Utils + MSW. Focus areas, roughly in priority order:
    frontend worth testing in isolation from any component.
 2. **Leaderboard rendering** — rank ordering, provisional markers, top-3 medal accents, and that a
    FLIP reorder actually fires when the underlying data changes rank.
-3. **Theme toggle** — persists to `localStorage`, respects `prefers-color-scheme` on first load
-   when nothing is stored yet.
+3. **Theme toggle** — persists to `localStorage`, defaults to dark even when the system prefers
+   light and nothing is stored yet (`useTheme.spec.ts`).
 
 MSW handlers back all of the above against the seeded in-memory store described in
 [ARCHITECTURE.md](ARCHITECTURE.md#contract-sync) — tests should exercise the real query hooks

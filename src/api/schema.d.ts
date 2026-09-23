@@ -538,6 +538,8 @@ export interface operations {
                         name: string;
                         avatarUrl: string | null;
                         isActive: boolean;
+                        /** Format: date-time */
+                        createdAt: string;
                         lastPlayedAt: string | null;
                     }[];
                 };
@@ -844,6 +846,39 @@ export interface operations {
                             /** Format: date-time */
                             recordedAt: string;
                             decidedOnPenalties: boolean;
+                            outcome: {
+                                home: {
+                                    playerId: string;
+                                    before: {
+                                        rating: number;
+                                        gamesPlayed: number;
+                                    };
+                                    after: {
+                                        rating: number;
+                                        gamesPlayed: number;
+                                    };
+                                    expectedScore: number;
+                                    actualScore: 1 | 0.5 | 0;
+                                    delta: number;
+                                    wasProvisional: boolean;
+                                };
+                                away: {
+                                    playerId: string;
+                                    before: {
+                                        rating: number;
+                                        gamesPlayed: number;
+                                    };
+                                    after: {
+                                        rating: number;
+                                        gamesPlayed: number;
+                                    };
+                                    expectedScore: number;
+                                    actualScore: 1 | 0.5 | 0;
+                                    delta: number;
+                                    wasProvisional: boolean;
+                                };
+                                upset: boolean;
+                            } | null;
                         }[];
                         nextCursor: number | null;
                     };

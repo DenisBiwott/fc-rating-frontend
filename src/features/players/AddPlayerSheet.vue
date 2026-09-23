@@ -8,6 +8,13 @@ import { CreatePlayerError, useCreatePlayer } from '@/queries/useCreatePlayer'
 const open = defineModel<boolean>('open', { required: true })
 
 const name = ref('')
+const nameInput = ref<HTMLInputElement | null>(null)
+
+// DESIGN-SPEC.md AddPlayer: Name is "focused on open". reka would focus Cancel (first in the DOM).
+function focusName(event: Event): void {
+  event.preventDefault()
+  nameInput.value?.focus()
+}
 const createPlayer = useCreatePlayer()
 
 const trimmedName = () => name.value.trim()
@@ -33,7 +40,7 @@ async function submit(): Promise<void> {
 
 <template>
   <Sheet v-model:open="open">
-    <SheetContent title="Add player">
+    <SheetContent title="Add player" @open-auto-focus="focusName">
       <div class="flex items-center justify-between">
         <span class="text-lg font-bold text-text-primary">Add player</span>
         <button type="button" class="text-sm text-text-secondary" @click="open = false">Cancel</button>
@@ -42,9 +49,9 @@ async function submit(): Promise<void> {
       <div class="flex flex-col gap-1.75">
         <span class="font-mono text-[10px] tracking-[0.14em] text-text-muted">NAME</span>
         <input
+          ref="nameInput"
           v-model="name"
           type="text"
-          autofocus
           maxlength="24"
           placeholder="Player name"
           class="h-13 rounded-[14px] border border-border-control bg-bg-control px-3.5 text-[17px] font-medium text-text-primary outline-none focus:border-accent-up"

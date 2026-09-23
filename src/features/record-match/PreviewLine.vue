@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md's PreviewLine spec. Colors follow DeltaBadge's own sign-based rule (not a fixed
+// DESIGN-SPEC.md's PreviewLine spec. Colors follow DeltaBadge's own sign-based rule (not a fixed
 // home=green/away=coral) — the design doc's own worked example just happens to have home win.
 //
 // Always renders its own layout height, filled or not: `outcome` is the caller's `lastOutcome`
@@ -45,8 +45,8 @@ const caption = computed(() => {
         <span>{{ awayPct }}%</span>
       </div>
       <div class="flex h-1.5 overflow-hidden rounded-full bg-bg-control">
-        <span class="h-full" :style="{ width: `${homePct}%`, background: '#4a5568' }" />
-        <span class="h-full" :style="{ width: `${awayPct}%`, background: '#2f3947' }" />
+        <span class="h-full" :style="{ width: `${homePct}%`, background: 'var(--color-preview-bar-home)' }" />
+        <span class="h-full" :style="{ width: `${awayPct}%`, background: 'var(--color-preview-bar-away)' }" />
       </div>
       <div class="flex items-center justify-between">
         <DeltaBadge :value="outcome.home.delta" class="text-xl" />

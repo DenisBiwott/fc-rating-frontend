@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Mono, tabular, animates old -> new over ~700ms via requestAnimationFrame — never a CSS
-// transition on text content (design-spec.md's RatingNumber spec). Rounds to integer at render
+// transition on text content (DESIGN-SPEC.md's RatingNumber spec). Rounds to integer at render
 // only; only animates on a value *change*, not on initial mount.
 import { onBeforeUnmount, ref, watch } from 'vue'
 

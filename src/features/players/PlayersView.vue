@@ -32,7 +32,7 @@ function handleAddClick(): void {
 
 <template>
   <section class="flex h-full flex-none flex-col *:shrink-0">
-    <header class="flex items-end justify-between px-5 pt-3.5 pb-3.5">
+    <header class="flex items-end justify-between px-5 sm:px-8 pt-3.5 pb-3.5">
       <div>
         <div class="text-[26px] font-bold tracking-[-0.02em] text-text-primary">Players</div>
         <div class="mt-0.5 text-[13px] text-text-muted">
@@ -49,7 +49,7 @@ function handleAddClick(): void {
       </button>
     </header>
 
-    <div class="flex gap-1.5 px-5 pb-3.5">
+    <div class="flex gap-1.5 px-5 sm:px-8 pb-3.5">
       <button
         type="button"
         class="h-8.5 flex-1 rounded-[9px] text-[13px] font-semibold"
@@ -77,7 +77,7 @@ function handleAddClick(): void {
     </div>
 
     <PlayerRosterRow v-for="player in players" :key="player.id" :player="player" />
-    <p v-if="players?.length === 0" class="px-5 py-6 font-mono text-sm text-text-muted">
+    <p v-if="players?.length === 0" class="px-5 sm:px-8 py-6 font-mono text-sm text-text-muted">
       No {{ showActive ? 'active' : 'inactive' }} players.
     </p>
 

@@ -31,7 +31,7 @@ const timeLabel = computed(() => {
 </script>
 
 <template>
-  <div class="flex items-center gap-2.75 border-t border-border-hairline px-5 py-2.5">
+  <div class="flex items-center gap-2.75 border-t border-border-hairline px-5 sm:px-8 py-2.5">
     <ResultChip :result="match.result" :size="20" />
     <div class="min-w-0 flex-1">
       <div class="text-sm font-medium text-text-primary">vs {{ match.opponentName }}</div>

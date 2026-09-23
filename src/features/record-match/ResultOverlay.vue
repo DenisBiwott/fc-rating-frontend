@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md's ResultOverlay spec: full-screen green-cast canvas (the only screen allowed a
+// DESIGN-SPEC.md's ResultOverlay spec: full-screen green-cast canvas (the only screen allowed a
 // tinted canvas), UPSET badge, ticking ratings, rank change, then Record another / Done. Focus
 // moves here on open (docs/CLAUDE.md's accessibility non-negotiable) and Escape acts like
 // dismissing back to record another rather than losing the moment entirely.
@@ -37,6 +37,16 @@ onMounted(() => overlayRef.value?.focus())
 
 const isDraw = computed(() => props.homeOutcome.actualScore === 0.5)
 const winnerIsHome = computed(() => props.homeOutcome.actualScore === 1)
+// Winner green wash, loser coral wash (DESIGN-SPEC.md ResultOverlay); a draw has neither, so both
+// cards get a neutral wash in the draw chip's grey (rgba(161,161,170,…), mode-independent like the
+// other tints) rather than both reading as losers.
+function cardClass(side: 'home' | 'away'): string {
+  if (isDraw.value) return 'border-[rgba(161,161,170,0.24)] bg-[rgba(161,161,170,0.06)]'
+  const won = side === 'home' ? winnerIsHome.value : !winnerIsHome.value
+  return won
+    ? 'border-[rgba(52,211,153,0.30)] bg-[rgba(52,211,153,0.07)]'
+    : 'border-[rgba(244,113,89,0.24)] bg-[rgba(244,113,89,0.05)]'
+}
 const winnerName = computed(() => (winnerIsHome.value ? props.homeName : props.awayName))
 const loserName = computed(() => (winnerIsHome.value ? props.awayName : props.homeName))
 const winnerWinProb = computed(() =>
@@ -53,8 +63,7 @@ function handleKeydown(event: KeyboardEvent): void {
 <template>
   <div
     ref="overlayRef"
-    class="absolute inset-0 z-20 flex flex-col items-center overflow-y-auto px-5 py-8"
-    style="background: #08110c"
+    class="absolute inset-0 z-20 flex flex-col items-center overflow-y-auto bg-bg-result px-5 py-8"
     role="dialog"
     aria-live="assertive"
     aria-modal="true"
@@ -71,7 +80,7 @@ function handleKeydown(event: KeyboardEvent): void {
     <p class="font-mono text-[72px] font-bold tracking-[-0.04em] text-text-primary">
       {{ homeScore }}–{{ awayScore }}
     </p>
-    <p class="mb-6 text-base" style="color: #8b9a91">
+    <p class="mb-6 text-base text-text-result-meta">
       <template v-if="!isDraw">{{ winnerName }} beats {{ loserName }} · {{ winnerWinProb }}% to win</template>
       <template v-else>{{ homeName }} draws {{ awayName }}</template>
     </p>
@@ -79,11 +88,7 @@ function handleKeydown(event: KeyboardEvent): void {
     <div class="mb-6 flex w-full max-w-xs gap-3">
       <div
         class="flex flex-1 flex-col items-center gap-1 rounded-2xl border p-3"
-        :class="
-          winnerIsHome
-            ? 'border-[rgba(52,211,153,0.30)] bg-[rgba(52,211,153,0.07)]'
-            : 'border-[rgba(244,113,89,0.24)] bg-[rgba(244,113,89,0.05)]'
-        "
+        :class="cardClass('home')"
       >
         <AvatarTile :name="homeName" :size="44" />
         <span class="text-base text-text-primary">{{ homeName }}</span>
@@ -98,11 +103,7 @@ function handleKeydown(event: KeyboardEvent): void {
       </div>
       <div
         class="flex flex-1 flex-col items-center gap-1 rounded-2xl border p-3"
-        :class="
-          !winnerIsHome && !isDraw
-            ? 'border-[rgba(52,211,153,0.30)] bg-[rgba(52,211,153,0.07)]'
-            : 'border-[rgba(244,113,89,0.24)] bg-[rgba(244,113,89,0.05)]'
-        "
+        :class="cardClass('away')"
       >
         <AvatarTile :name="awayName" :size="44" />
         <span class="text-base text-text-primary">{{ awayName }}</span>
@@ -119,8 +120,7 @@ function handleKeydown(event: KeyboardEvent): void {
 
     <p
       v-if="sessionContext"
-      class="mb-6 font-mono text-[10px] tracking-[0.14em] uppercase"
-      style="color: #6b7c72"
+      class="mb-6 font-mono text-[10px] tracking-[0.14em] text-text-result-faint uppercase"
     >
       Match {{ sessionContext.matchCount }} of {{ sessionContext.name }}
     </p>
@@ -133,7 +133,7 @@ function handleKeydown(event: KeyboardEvent): void {
       >
         Record another
       </button>
-      <button type="button" class="h-13 rounded-2xl border border-[#2e3a34] text-[#d4d4d8]" @click="emit('done')">
+      <button type="button" class="h-13 rounded-2xl border border-border-result-secondary text-text-result-secondary" @click="emit('done')">
         Done
       </button>
     </div>

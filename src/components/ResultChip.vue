@@ -10,7 +10,7 @@ type MatchResult = 'W' | 'L' | 'D'
 defineProps<{ result: MatchResult; size?: number; fontSize?: number }>()
 
 const chipClasses: Record<MatchResult, string> = {
-  W: 'bg-[rgba(52,211,153,0.16)] text-accent-up-bright',
+  W: 'bg-[rgba(52,211,153,0.16)] text-text-up-bright',
   L: 'bg-[rgba(244,113,89,0.16)] text-accent-down',
   D: 'bg-[rgba(161,161,170,0.16)] text-text-secondary',
 }

@@ -10,7 +10,7 @@ export interface RecentPlayer {
 }
 
 /**
- * No endpoint returns players in "most recently played" order — design-spec.md's PlayerGrid
+ * No endpoint returns players in "most recently played" order — DESIGN-SPEC.md's PlayerGrid
  * wants that ordering, so it's derived here from GET /matches (already newest-first per
  * docs/API.md), same "derived over cached" pattern as the rest of this project, not a contract
  * gap like useLeaderboard's composition.

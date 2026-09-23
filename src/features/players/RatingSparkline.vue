@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Hand-rolled SVG, no chart library (design-spec.md §5: "one sparkline at MVP, hand-rolled SVG").
+// Hand-rolled SVG, no chart library (DESIGN-SPEC.md §5: "one sparkline at MVP, hand-rolled SVG").
 // Mirrors the canvas mockup's structure (viewBox 0 0 322 60, a dashed baseline reference line)
 // but computes real scaling rather than copying static points: the plotted domain always includes
 // the config baseline (1200) so the dashed reference line is never mathematically wrong or
@@ -49,7 +49,7 @@ const baselineY = computed(() => scaleY(BASELINE))
 const trendColor = computed(() => {
   const first = last20.value[0]?.after
   const last = last20.value.at(-1)?.after
-  if (first === undefined || last === undefined || last === first) return '#71717a'
+  if (first === undefined || last === undefined || last === first) return 'var(--color-text-muted)'
   return last > first ? 'oklch(0.78 0.19 148)' : 'oklch(0.72 0.17 25)'
 })
 
@@ -58,7 +58,7 @@ const maxValue = computed(() => Math.max(...last20.value.map((h) => h.after)))
 </script>
 
 <template>
-  <div class="mx-5 mb-3.5 rounded-2xl border border-border-hairline bg-bg-raised px-3.5 pt-3 pb-2.5">
+  <div class="mx-5 sm:mx-8 mb-3.5 rounded-2xl border border-border-hairline bg-bg-raised px-3.5 pt-3 pb-2.5">
     <div class="mb-2 flex items-baseline justify-between">
       <span class="font-mono text-[10px] tracking-[0.14em] text-text-muted">LAST 20 MATCHES</span>
       <span v-if="peak !== null" class="font-mono text-[11px] text-text-secondary">peak {{ Math.round(peak) }}</span>
@@ -84,7 +84,7 @@ const maxValue = computed(() => Math.max(...last20.value.map((h) => h.after)))
         :y1="baselineY"
         :x2="VIEW_WIDTH"
         :y2="baselineY"
-        stroke="#26262b"
+        stroke="var(--color-chart-grid)"
         stroke-width="1"
         stroke-dasharray="3 4"
       />
@@ -95,7 +95,7 @@ const maxValue = computed(() => Math.max(...last20.value.map((h) => h.after)))
 
     <div v-if="points.length >= 2" class="mt-0.5 flex justify-between font-mono text-[10px] text-text-faint">
       <span>{{ Math.round(minValue) }}</span>
-      <span class="text-[#3f3f46]">baseline {{ BASELINE }}</span>
+      <span class="text-neutral-quiet">baseline {{ BASELINE }}</span>
       <span>{{ Math.round(maxValue) }}</span>
     </div>
   </div>

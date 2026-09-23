@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md's MatchSlot spec. Empty state is a dashed avatar outline and no name; tapping a
+// DESIGN-SPEC.md's MatchSlot spec. Empty state is a dashed avatar outline and no name; tapping a
 // filled slot clears it (grid tiles only ever fill an empty slot, never clear one).
 import AvatarTile from '@/components/AvatarTile.vue'
 import RatingNumber from '@/components/RatingNumber.vue'

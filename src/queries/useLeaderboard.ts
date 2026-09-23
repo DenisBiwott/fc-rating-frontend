@@ -13,6 +13,8 @@ export interface LeaderboardRow {
   wins: number
   losses: number
   draws: number
+  /** 0..1, from GET /leaderboard (wins / games, 0 with no games) — never recomputed for display. */
+  winPct: number
   form: MatchResult[]
   isProvisional: boolean
   /** null = no delta for the relevant session (didn't play in it, or no session exists at all). */
@@ -99,6 +101,7 @@ async function fetchLeaderboard(): Promise<LeaderboardData> {
       wins: entry.wins,
       losses: entry.losses,
       draws: entry.draws,
+      winPct: entry.winPct,
       form: entry.form,
       isProvisional: entry.isProvisional,
       deltaSinceLastSession: deltasByPlayerId.get(entry.playerId) ?? null,
@@ -148,11 +151,15 @@ export function applyRecordedMatchOptimistically(
 
     const updateRow = (row: LeaderboardRow, side: RecordedSide): LeaderboardRow => {
       const result: MatchResult = side.actualScore === 1 ? 'W' : side.actualScore === 0.5 ? 'D' : 'L'
+      const wins = row.wins + (result === 'W' ? 1 : 0)
       return {
         ...row,
         rating: side.after.rating,
         gamesPlayed: side.after.gamesPlayed,
-        wins: row.wins + (result === 'W' ? 1 : 0),
+        wins,
+        // Same definition as the backend's leaderboard (src/app/leaderboard.ts), so the optimistic
+        // value matches what the next refetch returns.
+        winPct: side.after.gamesPlayed === 0 ? 0 : wins / side.after.gamesPlayed,
         losses: row.losses + (result === 'L' ? 1 : 0),
         draws: row.draws + (result === 'D' ? 1 : 0),
         form: [...row.form, result].slice(-5),

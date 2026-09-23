@@ -1,7 +1,9 @@
 <script setup lang="ts">
-// design-spec.md §4: "Record match — status bar, Cancel | Record match | session name bar,
+// DESIGN-SPEC.md §4: "Record match — status bar, Cancel | Record match | session name bar,
 // Home/Away slots + swap, player grid, score steppers, preview line, Went to penalties link,
 // Confirm. One scrolling card, no wizard, no modal, no login."
+// Full-screen (route meta `fullscreen`: no AccountBar/BottomNav), with Confirm pinned in a footer —
+// the nav's green Record FAB used to outshine a Confirm that could sit below the fold.
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCurrentSession } from '@/queries/useCurrentSession'
@@ -111,25 +113,31 @@ function handleDone(): void {
 
       <button
         type="button"
-        class="mx-5 mt-1 text-center text-xs text-text-muted underline"
+        class="mx-5 mt-1 mb-4 text-center text-xs text-text-muted underline"
         @click="form.decidedOnPenalties.value = !form.decidedOnPenalties.value"
       >
         {{ form.decidedOnPenalties.value ? 'Went to penalties ✓' : 'Went to penalties' }}
       </button>
 
-      <p v-if="form.submitError.value" role="alert" class="mx-5 mt-3 text-sm text-accent-down">
+    </template>
+
+    <!-- Pinned to the bottom of this scroll container (the view root) so Confirm is always on
+         screen, however far the form scrolls. Always rendered, disabled until both players are
+         picked, so the layout never jumps and the goal is visible from the first tap. mt-auto
+         keeps it at the bottom when the form is shorter than the viewport. -->
+    <footer class="sticky bottom-0 mt-auto flex flex-col gap-3 border-t border-border-hairline bg-bg-canvas px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <p v-if="form.submitError.value" role="alert" class="text-sm text-accent-down">
         {{ form.submitError.value }} — <button type="button" class="underline" @click="form.submit()">Retry</button>
       </p>
-
       <button
         type="button"
-        class="mx-5 mt-4 mb-6 h-14 rounded-2xl bg-accent-up text-[17px] font-bold text-accent-up-ink shadow-[0_12px_30px_-12px_rgba(52,211,153,0.6)] disabled:opacity-50"
+        class="h-14 rounded-2xl bg-accent-up text-[17px] font-bold text-accent-up-ink shadow-[0_12px_30px_-12px_rgba(52,211,153,0.6)] disabled:opacity-50 disabled:shadow-none"
         :disabled="!form.isValid.value || form.state.value === 'submitting'"
         @click="form.submit()"
       >
         {{ form.state.value === 'submitting' ? 'Recording…' : 'Confirm result' }}
       </button>
-    </template>
+    </footer>
 
     <ResultOverlay
       v-if="form.state.value === 'result' && form.record.data.value"
