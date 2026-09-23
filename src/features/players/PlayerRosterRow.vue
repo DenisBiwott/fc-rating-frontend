@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import AvatarTile from '@/components/AvatarTile.vue'
 import RatingNumber from '@/components/RatingNumber.vue'
 import type { RosterPlayer } from '@/queries/usePlayersRoster'
+import { formatPlayedAt } from '@/lib/played-at'
 
 const props = defineProps<{ player: RosterPlayer }>()
 
@@ -16,19 +17,9 @@ const medal = computed<'gold' | 'silver' | 'bronze' | undefined>(() => {
 
 const unrated = computed(() => props.player.isActive && props.player.gamesPlayed === 0)
 
-const lastPlayedLabel = computed(() => {
-  if (!props.player.lastPlayedAt) return 'no matches yet'
-  const played = new Date(props.player.lastPlayedAt)
-  const now = new Date()
-  const sameDay =
-    played.getFullYear() === now.getFullYear() &&
-    played.getMonth() === now.getMonth() &&
-    played.getDate() === now.getDate()
-  const when = sameDay
-    ? played.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
-    : played.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  return `last played ${when}`
-})
+const lastPlayedLabel = computed(() =>
+  props.player.lastPlayedAt ? `last played ${formatPlayedAt(props.player.lastPlayedAt, new Date())}` : 'no matches yet',
+)
 
 const matchesLabel = computed(() =>
   props.player.gamesPlayed === null ? lastPlayedLabel.value : `${props.player.gamesPlayed} matches · ${lastPlayedLabel.value}`,
@@ -38,7 +29,7 @@ const matchesLabel = computed(() =>
 <template>
   <RouterLink
     :to="{ name: 'player-profile', params: { id: player.id } }"
-    class="flex items-center gap-3 border-t border-border-hairline px-5 py-2.75"
+    class="flex items-center gap-3 border-t border-border-hairline px-5 sm:px-8 py-2.75"
   >
     <AvatarTile :name="player.name" :size="38" :medal="medal" :dashed="unrated" />
     <div class="min-w-0 flex-1">

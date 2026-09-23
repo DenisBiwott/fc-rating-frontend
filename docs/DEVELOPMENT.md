@@ -11,8 +11,8 @@
 Mirrors the original scaffold prompt, committing after each step:
 
 1. App shell — bottom nav (Leaderboard / Record / Players), dark-by-default via a `dark` class on
-   `<html>` with a light toggle persisted in `localStorage` and `prefers-color-scheme` respected on
-   first load. Login screen appears only on a 401 from `GET /auth/me` — never inline in the match
+   `<html>` (dark on first load regardless of system preference), with a light toggle in
+   `AccountBar` persisted in `localStorage`. Login screen appears only on a 401 from `GET /auth/me` — never inline in the match
    flow. Can start against a hand-stubbed contract before the backend has real routes.
 2. Leaderboard — rows, hero rating number with tabular tick animation, delta badge, form strip,
    provisional marker, top-3 medal accents, FLIP row reorder, live-session banner.

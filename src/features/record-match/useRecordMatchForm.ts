@@ -11,6 +11,7 @@ import { useMatchPreview } from '@/queries/useMatchPreview'
 import { useRecordMatch } from '@/queries/useRecordMatch'
 
 export type FormState = 'selecting' | 'scoring' | 'submitting' | 'result' | 'done'
+export type Side = 'home' | 'away'
 
 const MAX_SCORE = 20
 const PREVIEW_DEBOUNCE_MS = 150
@@ -27,6 +28,10 @@ export function useRecordMatchForm() {
   const homeScore = ref(0)
   const awayScore = ref(0)
   const decidedOnPenalties = ref(false)
+  // The slot a pick fills while selecting, and the score ↑/↓ adjusts while scoring (desktop
+  // keyboard, DESIGN-SPEC.md §6). Tracks the first empty slot unless ← / → moves it, so tapping a
+  // tile behaves exactly as before: Home, then Away.
+  const activeSide = ref<Side>('home')
   const matchId = ref(uuidv7())
   const submitError = ref<string | null>(null)
   const resultSession = ref<ResultSessionContext | null>(null)
@@ -53,17 +58,25 @@ export function useRecordMatchForm() {
 
   function selectPlayer(playerId: string): void {
     if (state.value !== 'selecting') return
-    // Already-selected grid tiles are inert (design-spec.md's PlayerGrid spec) — clearing a slot
+    // Already-selected grid tiles are inert (DESIGN-SPEC.md's PlayerGrid spec) — clearing a slot
     // happens by tapping the slot itself, not by tapping the grid tile again.
     if (homePlayerId.value === playerId || awayPlayerId.value === playerId) return
-    if (homePlayerId.value === null) {
-      homePlayerId.value = playerId
-    } else if (awayPlayerId.value === null) {
-      awayPlayerId.value = playerId
+    const slotOf = (side: Side) => (side === 'home' ? homePlayerId : awayPlayerId)
+    const other: Side = activeSide.value === 'home' ? 'away' : 'home'
+    const target =
+      slotOf(activeSide.value).value === null ? activeSide.value : slotOf(other).value === null ? other : null
+    if (target === null) return
+    slotOf(target).value = playerId
+    if (bothSelected.value) {
+      state.value = 'scoring'
+      activeSide.value = 'home'
     } else {
-      return
+      activeSide.value = target === 'home' ? 'away' : 'home'
     }
-    if (bothSelected.value) state.value = 'scoring'
+  }
+
+  function setActiveSide(side: Side): void {
+    if (state.value === 'selecting' || state.value === 'scoring') activeSide.value = side
   }
 
   function clearSlot(side: 'home' | 'away'): void {
@@ -71,6 +84,7 @@ export function useRecordMatchForm() {
     if (side === 'home') homePlayerId.value = null
     else awayPlayerId.value = null
     state.value = 'selecting'
+    activeSide.value = side
     lastOutcome.value = null
   }
 
@@ -156,11 +170,30 @@ export function useRecordMatchForm() {
     decidedOnPenalties.value = false
     matchId.value = uuidv7()
     submitError.value = null
+    activeSide.value = 'home'
     state.value = 'scoring'
   }
 
   function done(): void {
     state.value = 'done'
+  }
+
+  /** Back to an empty form with a fresh match id: the drawer's result closing, and a Home
+   *  pre-fill, where the form outlives a single match (the /record screen instead unmounts on
+   *  Done). */
+  function reset(): void {
+    if (debounceTimer) clearTimeout(debounceTimer)
+    homePlayerId.value = null
+    awayPlayerId.value = null
+    homeScore.value = 0
+    awayScore.value = 0
+    decidedOnPenalties.value = false
+    matchId.value = uuidv7()
+    submitError.value = null
+    resultSession.value = null
+    lastOutcome.value = null
+    activeSide.value = 'home'
+    state.value = 'selecting'
   }
 
   return {
@@ -170,6 +203,7 @@ export function useRecordMatchForm() {
     homeScore,
     awayScore,
     decidedOnPenalties,
+    activeSide,
     isValid,
     submitError,
     resultSession,
@@ -177,6 +211,7 @@ export function useRecordMatchForm() {
     lastOutcome,
     record,
     selectPlayer,
+    setActiveSide,
     clearSlot,
     swapSides,
     incrementScore,
@@ -185,5 +220,6 @@ export function useRecordMatchForm() {
     submit,
     recordAnother,
     done,
+    reset,
   }
 }

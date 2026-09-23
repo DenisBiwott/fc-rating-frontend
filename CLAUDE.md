@@ -107,10 +107,70 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Not yet done: the actual Netlify s
 setting Cloud Run's `CORS_ORIGIN` to the final Netlify URL, and end-to-end verification in a real
 browser. Phase 7 (admin — rating-config viewer/rebuild button) is real remaining work but wasn't
 asked for before the hosting push; revisit after hosting is verified live.
+**Turn 3 (desktop & tablet) started 2026-09-23 — Slice 0 done.** Built from the canvas's Turn 3
+(`../FC Rating UI.dc.html`, 3a–3f) and `../DESIGN-SPEC.md` §6, as sequential slices (shell → tablet
+→ desktop table → docked Record panel → result/FLIP → keyboard → profile → roster → TV).
+Slice 0: contract synced for the backend's two additions (`createdAt` on `GET /players`, nullable
+`outcome` on `GET /matches` items), mocks updated to match. Also: the theme toggle moved from
+`AdminView` (admin-only) to `AccountBar`, and the default is now always dark rather than following
+`prefers-color-scheme`; `index.html` ships `class="dark"` so the default paints before JS runs.
+**Slice 1 (mobile fixes) done, 2026-09-23.** Every hard-coded colour in components is now a theme
+token (docs/DESIGN_SYSTEM.md#theming), which fixed a light-mode result screen that was unreadable
+(see Scars). `/record` is `fullscreen` (no AccountBar/BottomNav) with Confirm pinned in a footer.
+Verified in Chrome at 390×844 and 390×600 against MSW, in both themes. On a draw, both result
+cards now get a neutral grey wash instead of both reading as losers.
+**Slice 2 (responsive shell) done, 2026-09-23.** The phone card is gone. `DesktopRail` (lg+)
+replaces `AccountBar` + `BottomNav`, the nav gets Turn 3's icons, the tablet nav is centred, and
+there's a global focus-visible ring. Content stays a 600px centred column from sm up until each
+screen's own slice (docs/ARCHITECTURE.md#responsive-shell). `useAccount()` is shared by
+`AccountBar` and the rail. TV sits inert in the rail until its slice.
+**Light-mode green text + Slice 3 (tablet) done, 2026-09-23.** Green *text* uses new `text-up*`
+tokens, darker in light mode (measured 1.3–1.8:1 before, ≥4.5:1 after). Fills keep the accent.
+Tablet (3f): route meta `layout` now decides when a screen's content column is capped
+(docs/ARCHITECTURE.md#responsive-shell). Leaderboard, roster and profile are full width with
+32px gutters from `sm`, and the leaderboard gains W-L-D/Win% columns with 66px rows. Provisional
+badges are inline, so phone rows are uniform again. Sheets are centred dialogs from `sm`. Fixed
+while here: Add player now focuses Name on open (it was focusing Cancel).
+**Slice 4 (desktop leaderboard, 3a left) done, 2026-09-23.** From `lg`, the leaderboard is the
+3a table (`LeaderboardTable`), with click-to-sort headers and columns chosen from the table's
+measured width (`columns.ts`: Last, then MP, then W/L/D merge, then the tablet rows). Unrated
+players sort last and provisional ones normally, following the backend's ranking rather than the
+spec's wording (docs/DESIGN_SYSTEM.md). `lastPlayedAt` is now on leaderboard rows, and the page
+caps at 1440. The mock db now ranks unrated players last like the backend does.
+**Slice 5 (docked Record panel, 3a right) done, 2026-09-23.** `RecordMatchForm` (variants
+`screen`/`panel`) was extracted from `RecordMatchView`. On desktop, admins get a 420px panel docked
+beside the leaderboard (anonymous visitors don't); other screens open it as a right-side drawer
+from the rail's Record button or a profile's "Record with {name}". `/record` on a desktop window
+redirects to the panel, carrying `?home=`. The phone/tablet list now switches layout on its
+*container* width, so it fits beside the panel at 1024px (docs/ARCHITECTURE.md).
+**Slice 6 (result in panel, 3b) done, 2026-09-23.** `ResultOverlay` has a `panel` variant (a
+"Result · MATCH n · time" header and stacked full-width cards). After each recorded match the
+leaderboard tints its two players' rows green/coral with ▲n/▼n for 4s (`useRecentMoves`), while
+the rows FLIP and the ratings tick. **Undo was dropped (Denis, 2026-09-23)**: not built, and the
+secondary action stays Done.
+**Coral text + Slice 7 (desktop keyboard) done, 2026-09-23.** Coral text uses `text-down`
+(light mode `oklch(0.52 0.17 25)`, ≥4.6:1), like green. Keyboard: global `R` opens/focuses
+Record, and inside the panel ← → switch the active slot (new `activeSide` in the form), letters and
+↑ ↓ pick players, ↑ ↓ set scores, ↵ confirms, Esc clears; `R` on the result is Record another.
+A whole match was recorded by keyboard alone in Chrome (docs/DESIGN_SYSTEM.md#core-components).
+**Slice 8 (desktop profile, 3c) done, 2026-09-23.** From `lg`, the profile has two columns: hero,
+stat tiles and `RatingChart` (axis, gridlines, peak), beside `ProfileMatchTable` (full history,
+cursor-paged, columns fit its width, row `···` → Void). The header `···` is a dropdown (Rename…,
+Deactivate, Delete…) over the same actions dialog. `usePlayerMatches` is now an infinite query
+reading Δ/After from each match's `outcome`, so the rating-history join is gone. shadcn-vue's
+`DropdownMenu` was added. The MSW mock now serves the profile endpoints (see the MSW Scar below).
+**Slice 9 (desktop roster, 3d) done, 2026-09-23.** From `lg`, Players is `RosterTable` (Player ·
+Rating · W-L-D · Matches · Last played · Joined · `···`) capped at 1180px, with a segmented
+Active/Inactive control. "+ Add player" opens `AddPlayerPopover`, which shares `AddPlayerForm`
+with the phone sheet. Row menus: Rename…, Deactivate/Reactivate, Delete player…. Reactivate is
+new (the profile's desktop menu has it too); there was no way to undo a deactivation before.
+shadcn-vue's `Popover` was added. The MSW mock now handles player create/update/delete and
+`?active=`.
+**Slice 10 (TV mode, 3e) deferred, 2026-09-23** — see Scope boundaries for the plan.
 Build order otherwise lives in
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The full product design
-lives in `../fc-rating-platform-design.md` and the pixel-level visual spec in `../design-spec.md`
-(one directory up, outside this repo — planning documents, not committed here). This repo's docs
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The product design and
+pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — a
+planning document, not committed here). This repo's docs
 distill the sections that govern it; if the two ever disagree, treat that as a bug in this repo's
 docs, not a decision to quietly follow one side.
 
@@ -134,16 +194,29 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   one — not a permanent ban. If a genuine cross-cutting client-state need emerges that a composable
   can't reasonably express, Pinia (not Vuex — Pinia is Vue's current recommendation) is a legitimate
   addition; that's an architecture decision worth a line in this file, not a silent dependency add.
+  **Decided 2026-09-23 (Turn 3):** a second, small piece of client state, `useRecordLauncher`
+  (`src/features/record-match/`), holds where the record form opens on desktop: drawer open, a
+  queued Home pre-fill, and a focus request. It's module-level so the router guard, the rail, a
+  profile and the panel share it. A composable, still no Pinia. Likewise `useRecentMoves`
+  (`src/features/leaderboard/`): which two rows to tint for 4s after a recorded match.
 - **The record-match flow is one scrolling card** — no wizard, no modal, no login inside it. Tap
   Home/Away slots to fill from a recently-played grid, two score steppers, a debounced (150ms)
   preview line, a full-width Confirm using a client-generated UUID v7 reused verbatim on retry
-  (idempotent against the backend).
+  (idempotent against the backend). One component, `RecordMatchForm`, serves both places it lives:
+  the full-screen `/record` route (phones/tablets) and the desktop docked panel/drawer.
 - **Two accent hues, full stop**: green for positive, coral for negative, plus gold/silver/bronze
   for ranks 1–3 only. Ratings are the largest text on the leaderboard — nothing competes with
   them. All ratings/scores/deltas/records are tabular mono
   (`font-variant-numeric: tabular-nums`); color is never the only signal (form strip uses `W`/`L`/
   `D` letters, deltas use `+`/`−`). Every tap target is ≥ 44px. Full detail in
   [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
+- **Every colour works in both themes.** Dark is the default, light is opt-in via the toggle in
+  `AccountBar` / `DesktopRail`. Components use theme tokens only, never a hard-coded neutral hex/rgb. A mode-dependent
+  colour gets a token defined in both `:root` and `.dark` in `src/styles/main.css`. Only the
+  accents, medals and alpha tints are mode-independent, except that green and coral *text* use
+  `text-up*` / `text-down` (darker in light mode for contrast), never `text-accent-*`. A new or changed screen isn't done until
+  it has been looked at in both themes. Full rules and the token table:
+  [docs/DESIGN_SYSTEM.md#theming](docs/DESIGN_SYSTEM.md#theming).
 - Do **not** introduce: Vuex, Axios, hand-written API types, any UI kit besides shadcn-vue, or
   Nuxt. (Pinia is not on this list — see the state-management non-negotiable above.)
 
@@ -191,8 +264,8 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   instead — most visibly a fixed-height button collapsing to a fraction of its declared height.
   Swapping to `min-h-full` looked like the fix (fills-when-short is preserved, squish is gone), but
   a floor has no ceiling either: the root just grows to fit *all* its content with nothing capping
-  it, so it never overflows *itself* — the excess is then silently clipped by the outer phone-card's
-  `overflow-hidden`, invisible and unscrollable, which is worse than squishing. The actual fix is
+  it, so it never overflows *itself* — the excess is then silently clipped by the outer shell's
+  `overflow-hidden` main column, invisible and unscrollable, which is worse than squishing. The actual fix is
   `h-full` (a hard 100%, fills when short, caps when tall) *plus* `*:shrink-0` on that same root —
   because once its height is capped, its own direct children are ordinary flex items with the CSS
   default `flex-shrink: 1`, so the identical squish bug recurses one level down onto the view's own
@@ -210,12 +283,39 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   a new call, with `PreviewLine` rendering a same-height skeleton before the first-ever result so
   even that initial reveal doesn't move anything.
 
+- **A hard-coded surface under token-coloured text goes invisible in the other theme.**
+  `ResultOverlay` hard-coded its canvas as `#08110c` (the spec's green-cast black) while its
+  score, names and ratings used `text-text-primary`. The token flipped to `#0c0c0e` in light mode
+  and the background didn't, so the result screen, the product's payoff moment, rendered
+  near-black on near-black. It went unnoticed because the app had only ever been checked in dark
+  mode. Fixed by moving every mode-dependent colour onto tokens (docs/DESIGN_SYSTEM.md#theming).
+  The lesson: a surface and the text on it must both be tokens, or both be fixed. Never mix.
+
+- **An MSW `*/…` wildcard also matches the app's own source files.** The browser Service Worker sees
+  every request the page makes, including Vite's module URLs. A new `*/players/:id` handler matched
+  `/src/features/players/PlayerProfileView.vue` and answered the route's lazy import with a "player
+  not found" 404. The profile route then silently never loaded in mock mode: the router aborted
+  the navigation, and the page stayed where it was. Fixed by anchoring every handler to the API
+  base URL (`src/mocks/handlers.ts`). For mock-mode browser checks, also set
+  `VITE_API_BASE=http://localhost.invalid` so nothing a handler misses can reach a real backend.
+
 ## Scope boundaries
 
 Deliberately deferred — flag rather than silently building toward these: player head-to-head
 comparison, what-if rating-config UI (backend API can already support it), seasons, 2v2 matches,
 offline-first / PWA sync queue. See design doc §13 for the intended order if one becomes real
 work.
+
+**Future improvement: TV mode (Turn 3's 3e, the planned Slice 10, deferred by Denis 2026-09-23).**
+Designed in `../DESIGN-SPEC.md` §6 "TV mode" and the canvas's 3e. The plan when it's picked up:
+- a `/tv` route with no chrome (a `fullscreen`-style meta), entered from the rail's TV item;
+- standings refetched every 10s (TanStack Query `refetchInterval`);
+- diff each poll against the previous one, so changed rows FLIP, tint and show ▲/▼ like the
+  desktop leaderboard (`useRecentMoves` holds the same idea for one recorded match);
+- a LATEST column of the last 3 results from `GET /matches`, using each item's `outcome` for
+  deltas and the UPSET badge;
+- `Esc` exits.
+Until then the rail's TV item stays inert ("TV mode — coming soon").
 
 ## Process rules
 

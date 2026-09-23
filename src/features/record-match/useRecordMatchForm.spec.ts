@@ -54,6 +54,25 @@ describe('useRecordMatchForm', () => {
     expect(form.awayPlayerId.value).toBe('dennis')
   })
 
+  it('fills the active slot: Away first after → , and clearing a slot makes it active', () => {
+    const form = mountForm()
+    form.setActiveSide('away')
+    form.selectPlayer('ras')
+    expect(form.awayPlayerId.value).toBe('ras')
+    expect(form.activeSide.value).toBe('home')
+
+    form.selectPlayer('dennis')
+    expect(form.homePlayerId.value).toBe('dennis')
+    expect(form.state.value).toBe('scoring')
+    // Scoring starts on Home, so ↑/↓ adjust the home score first.
+    expect(form.activeSide.value).toBe('home')
+
+    form.clearSlot('away')
+    expect(form.activeSide.value).toBe('away')
+    form.selectPlayer('jason')
+    expect(form.awayPlayerId.value).toBe('jason')
+  })
+
   it('clamps scores to the 0-20 range', () => {
     const form = mountForm()
     form.selectPlayer('ras')
@@ -108,6 +127,26 @@ describe('useRecordMatchForm', () => {
     expect(form.awayPlayerId.value).toBe('jason')
     expect(form.homeScore.value).toBe(0)
     expect(form.awayScore.value).toBe(0)
+  })
+
+  it('reset() returns a finished form to an empty selecting state', async () => {
+    const form = mountForm()
+    form.selectPlayer('dave')
+    form.selectPlayer('stan')
+    form.setScore('home', 2)
+    form.decidedOnPenalties.value = true
+    await form.submit()
+    expect(form.state.value).toBe('result')
+
+    form.reset()
+
+    expect(form.state.value).toBe('selecting')
+    expect(form.homePlayerId.value).toBeNull()
+    expect(form.awayPlayerId.value).toBeNull()
+    expect(form.homeScore.value).toBe(0)
+    expect(form.decidedOnPenalties.value).toBe(false)
+    expect(form.lastOutcome.value).toBeNull()
+    expect(form.resultSession.value).toBeNull()
   })
 
   it('done() reaches a terminal state', async () => {

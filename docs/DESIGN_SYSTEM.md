@@ -1,8 +1,8 @@
 # Design system
 
-Distilled from `../design-spec.md` (pixel-level spec, outside this repo). That file governs visual
+Distilled from `../DESIGN-SPEC.md` (pixel-level spec, outside this repo). That file governs visual
 implementation in full detail; this page is the summary to keep in-repo. If they disagree, treat
-`../design-spec.md` as more current and flag the drift here.
+`../DESIGN-SPEC.md` as more current and flag the drift here.
 
 Target device: 390 × 844, dark default, Vue 3 + Tailwind + shadcn-vue.
 
@@ -20,10 +20,70 @@ Text: `#fafafa` (primary) → `#a1a1aa` (secondary) → `#71717a` (muted) → `#
 accents only**: `accent/up` (green, `oklch(0.78 0.19 148)`) for positive delta / confirm / record;
 `accent/down` (coral, `oklch(0.72 0.17 25)`) for negative delta. Gold/silver/bronze apply to ranks
 1–3 only, never as a general accent. Adding a third hue (blue for info, amber for warning) is a
-spec change, not a styling detail — don't add one without updating `../design-spec.md` first.
+spec change, not a styling detail — don't add one without updating `../DESIGN-SPEC.md` first.
 
 No gradients as decoration except the live-session banner. No glow except under the two green CTAs
 and the Record FAB.
+
+## Theming
+
+Two themes, **dark by default**. Light is an explicit opt-in. The default ignores
+`prefers-color-scheme` (Denis's call, 2026-09-23).
+
+**Mechanism.** A `dark` class on `<html>` selects the dark token values. `index.html` ships
+`<html class="dark">` so the default paints before any JS runs. `useTheme()`
+(`src/composables/useTheme.ts`) reads a stored choice from `localStorage` (`fc-rating-theme`),
+falls back to dark, keeps the class in sync, and persists every change. It must be called from
+`App.vue` (see CLAUDE.md's Scars). The toggle lives in `AccountBar`, which every visitor can
+reach.
+
+**Every colour a component uses is a token, never a hex.** Tokens are CSS variables defined twice
+in `src/styles/main.css`, once in `:root` (light) and once in `.dark`, and exposed to Tailwind
+through `@theme inline` (`bg-bg-result`, `text-text-muted`, `border-border-nav`, …). Inline SVG
+uses `var(--color-…)`. There are two kinds of token:
+
+- **Mode-dependent**: surfaces, text steps, borders, and the special-purpose neutrals below.
+  Each has a dark value (the spec's hex, verbatim) and a light counterpart.
+- **Green text** is the one accent exception. Fills (Record FAB, CTAs, live dot, chip washes) use
+  `accent-up` in both themes. Green *text* uses `text-up` / `text-up-bright` instead: the spec's
+  `accent-up` (dark) and `accent-up-bright` (dark), and `oklch(0.5 0.15 148)` in light mode.
+  Measured in light mode, the accent as text was 1.3–1.8:1 against WCAG's 4.5:1 for small text.
+  The darker green clears 4.5:1 on every light surface it sits on, including the green form chip.
+  Never use `text-accent-up*` for text. **Coral text, the same way:** `text-down` is `accent-down`
+  in dark mode and `oklch(0.52 0.17 25)` in light (measured 2.1:1 before, 4.6:1 or better after,
+  worst case the coral L chip). Never use `text-accent-down` for text. Lines and fills (the
+  sparkline stroke, destructive buttons, washes) keep the accents.
+- **Mode-independent**: the two accents, the medals, `accent-up-ink`, and the alpha tints
+  (green/coral washes, borders and chips, CTA shadows). An alpha tint works on either canvas
+  because it's transparent over whatever surface is behind it, so these can be written as
+  `rgba(...)` arbitrary values.
+
+A hard-coded neutral hex that *looks* right in dark mode is a light-mode bug waiting to happen. The
+worst case is a hard-coded surface under token-coloured text. The two flip independently, so a
+dark-only background plus `text-text-primary` renders dark-on-dark in light mode.
+
+Special-purpose neutrals:
+
+| Token | Dark | Light | Use |
+|---|---|---|---|
+| `border-nav` | `#1f1f24` | `#e4e4e6` | BottomNav top border |
+| `bg-panel` | `#0f0f12` | `#f4f4f5` | docked Record panel / drawer |
+| `text-emphasis` | `#d4d4d8` | `#3f3f46` | desktop table W/L/D counts (between primary and secondary) |
+| `text-nav-inactive` | `#6b6b74` | `#71717a` | BottomNav inactive tab |
+| `neutral-quiet` | `#3f3f46` | `#a1a1aa` | unplayed form chip, PROV/UNRATED badge border, chart baseline label |
+| `chart-grid` | `#26262b` | `#e4e4e6` | sparkline gridlines |
+| `preview-bar-home` / `-away` | `#4a5568` / `#2f3947` | `#8795a8` / `#c3cad4` | PreviewLine split bar (neutral, not accent) |
+| `bg-result` | `#08110c` | `#eef6f0` | result canvas, the one tinted canvas (green-cast black / off-white) |
+| `text-result-meta` / `-faint` | `#8b9a91` / `#6b7c72` | `#4f6157` / `#5f7167` | result caption / match-of-session label |
+| `text-down` | `oklch(0.72 0.17 25)` | `oklch(0.52 0.17 25)` | coral text: negative deltas, `L` letters, errors, destructive labels, `▼n` |
+| `text-up` / `text-up-bright` | `oklch(0.78 0.19 148)` / `oklch(0.82 0.17 148)` | `oklch(0.5 0.15 148)` (both) | green text: positive deltas, `W` letters, RECORD label, streaks |
+| `border-result-secondary`, `text-result-secondary` | `#2e3a34`, `#d4d4d8` | `#c3d3c9`, `#27272a` | result screen's secondary button |
+
+The light values are this repo's own inversions. `../DESIGN-SPEC.md` only states the rule ("invert
+surfaces and text, keep accents").
+
+**Adding UI:** reuse an existing token. If none fits, add one to both `:root` and `.dark`, then
+list it in the table above. Check the screen in both themes before calling it done.
 
 ## Typography
 
@@ -51,10 +111,91 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
 - **ScoreStepper** — `[− 44px][value][+ 44px]` per side, range 0–20, value tappable to type.
 - **PreviewLine** — win-probability mono row + a neutral-grey (not accent-colored) split bar +
   delta row. Debounced 150ms, `aria-live="polite"`.
-- **ResultOverlay** — full-screen, green-cast canvas, `aria-live="assertive"`, ~1.5s auto-linger,
-  dismissible. Focus moves to it on open and returns to Confirm on close.
+- **ResultOverlay** — full-screen, green-cast canvas (`bg-result`, both themes, see Theming),
+  `aria-live="assertive"`, ~1.5s auto-linger, dismissible. Player cards: winner green wash,
+  loser coral wash, both neutral grey on a draw. Two variants: `screen` (phones/tablets, cards side
+  by side, "MATCH n OF {session}" below) and `panel` (desktop 3b, covering only the Record panel:
+  a "Result · MATCH n · time" header and full-width stacked cards). Buttons: Record another plus
+  Done (no Undo; dropped 2026-09-23).
+- **Leaderboard after a result** (3b) — the two players' rows get the green (gained) or coral
+  (lost) wash for 4s, with `▲n` / `▼n` after the name when their rank moved. The rows FLIP into
+  their new order and the ratings tick (the existing two motions). The tint just switches on and
+  off; there's no fade, because §3 allows exactly three animations. Bystanders only FLIP. Focus moves to it on open. Returning
+  focus to Confirm on close is specced but not built yet.
+- **Navigation** — `BottomNav` below `lg` (Table / Record FAB / Players; icon + 10px label, FAB
+  with a `RECORD` label under it), `DesktopRail` at `lg` and up (88px: FC mark, 52px Record
+  button, Table, Players, account controls, TV — inert until TV mode is built, see CLAUDE.md Scope boundaries). `NavIcon` draws the outlined glyphs in
+  `currentColor`. The active item is `text-primary` (plus a `bg-control` fill on the rail), inactive
+  is `text-nav-inactive`. Every focusable element gets the global `:focus-visible` ring: 2px
+  `accent-up`, offset 2px (`main.css`).
+- **PlayerRow (leaderboard)** — phone: 1a compact ledger, with W-L-D inline after the form
+  strip. Tablet (3f, container ≥ 640px): 66px rows, 32px gutters, 38px avatar, and W-L-D and
+  Win% as their own columns. PROV/UNRATED badges sit inline after the name at every width, so every row is the same
+  height. Win% comes from the API's `winPct` (the optimistic update recomputes it the backend's
+  way: wins ÷ games); an unrated player shows `—`, not `0%`.
+- **Desktop leaderboard table** (3a, `lg` and up) — 58px rows, 28px gutters, columns
+  `# · Player · Form · W · L · D · Win% · MP · Last · Rating (26px) · Δ`, with widths in
+  `features/leaderboard/columns.ts`. Row hover is `bg-raised`, and a click opens the profile.
+  Clicking a header sorts (one direction per column; `↓` marks the active one), and sorting resets
+  on reload. **Columns fit the table's own width, not the viewport**: as it narrows (the docked
+  Record panel), Last drops first, then MP, then W/L/D merge into W-L-D; below ~704px the tablet
+  rows take over. **Unrated players sort last on every column; provisional players sort
+  normally.** That's the backend's ranking rule (`rankPlayers`), so the default Rating sort is
+  exactly rank order. DESIGN-SPEC.md §6 says "provisional & unrated sort last", but doing that
+  would print ranks out of order (a provisional #5 below a rated #7), so this follows the
+  backend. The footer hint reads "Unrated sort last".
+- **Record panel** (3a, desktop, admins only) — 420px, `bg-panel`, left border, docked beside the
+  leaderboard. Anywhere else it's a right-side drawer (slides in; Escape or backdrop closes it).
+  "Record match" with the session name (`text-up-bright`, uppercase) and Clear. The next slot to
+  fill gets a green border and a `0 0 0 3px rgba(52,211,153,0.14)` ring. The picker is every
+  active player in 4 columns, most recent first. Confirm is pinned at the bottom, and the result
+  overlay covers only the panel. "Record with {name}" on a profile opens it with Home filled.
+- **Keyboard (desktop)** — the global `R` (outside the Record panel, admins) opens or focuses it
+  (`useRecordShortcut`). Inside the panel (`recordKeyboard.ts`): `← →` switch the active slot
+  (shown by the green ring, in scoring too); a letter focuses the next player with that initial,
+  `↑ ↓` walk the players, and `↵` picks one; while scoring `↑ ↓` change the active score and `↵`
+  confirms; `Esc` clears (or closes the drawer). On the panel's result, `R` is Record another.
+  Picking keeps focus in the panel (next player, then Confirm). `KeyHint` chips: mono 10px, 1px
+  `border-control` border, or `rgba(4,22,13,0.35)` on green; they sit on the rail's Record, the
+  panel's Confirm (`↵`) and Record another (`R`), plus a hint line under Confirm. Buttons carry
+  `aria-keyshortcuts`.
+- **Profile, desktop** (3c, `lg`) — "‹ Leaderboard" with "Record with {name}" and `···` (a
+  dropdown: Rename…, Deactivate or Reactivate, Delete player… disabled once they've played) in the header. Then
+  a `460px | 1fr` grid. Left: `PlayerHero large` (avatar 76, name 34, rating 56),
+  `ProfileStats large` (values 22), `RatingChart`. Right: `ProfileMatchTable`, a `bg-nav` card of
+  54px rows (Opponent · Score · Δ · After · Session · When · `···` → Void match…), loaded 20 at a
+  time with "Load older matches". Its columns fit its own width, dropping Session, then When,
+  then After (`historyColumns.ts`). "Open match" isn't built (there's no match screen).
+- **RatingChart** — gridlines every 50 points (100 when the range is wide), y labels, `#first` /
+  `#last` match numbers, an endpoint dot, and the config baseline 1200 dashed. The mock's "1250"
+  was just its lowest gridline, and the phone sparkline dashes 1200 too. The stroke is green or
+  coral by net trend, as on the sparkline.
+- **Roster, desktop** (3d, `lg`) — header: "Players" 30px with `n active · m inactive`, a
+  segmented Active/Inactive control (`aria-pressed`), and "+ Add player". Below it,
+  `RosterTable`: a `bg-nav` card of 60px rows (Player · Rating · W-L-D · Matches · Last played ·
+  Joined · `···`), capped at 1180px. Every column fits from 1024px, so none is dropped. The name
+  link stretches over the row (row click → profile) so the `···` button isn't nested in a link.
+  The row menu has Rename…, Deactivate/Reactivate, and Delete player…, disabled once they've played. An inactive player
+  has no leaderboard entry, so Rating, W-L-D and Matches read "—" and Delete falls back to "no
+  last-played date". Anonymous visitors get a muted `···` and "+ Add player" that lead to login.
+- **Add player** — `AddPlayerForm` in two containers: `AddPlayerSheet` (phone/tablet) and
+  `AddPlayerPopover` (desktop, 360px, anchored under "+ Add player" right-aligned, with an `esc`
+  chip and `↵` on the CTA). Name is focused on open; a duplicate name shows the 409 inline. The
+  provisional note omits the mock's "ranked last until then", since only unrated players rank
+  last. The "Starting rating" override row is not built.
+- **Popover** (`components/ui/popover`, reka) — `bg-raised` surface, `border-control` border,
+  radius 18, deep shadow; Escape, click-outside and focus return to the trigger are built in.
+- **Menus** (`components/ui/dropdown-menu`, reka) — `bg-control` surface, `border-control` border,
+  38px items, and destructive items in coral on a `rgba(244,113,89,0.08)` wash. Keyboard
+  navigation, typeahead and Escape come built in.
+- **Sheets / dialogs** — `SheetContent` is a bottom sheet on phones and a centred dialog (440px,
+  fade plus a 4px rise) from `sm` up. Initial focus goes to the first focusable element unless the
+  sheet handles `@open-auto-focus` (Add player focuses Name, per spec).
+- **Record screen chrome** — full-screen (no AccountBar/BottomNav), with Confirm pinned in a footer
+  at the bottom of the scroll area. It is always rendered and disabled until both players are
+  picked, so the nav's green FAB never competes with it and it's never below the fold.
 
-Full component specs (exact padding, every state, canonical markup) are in `../design-spec.md`
+Full component specs (exact padding, every state, canonical markup) are in `../DESIGN-SPEC.md`
 §2 and §6 — copy the values from there, not from memory.
 
 ## Motion

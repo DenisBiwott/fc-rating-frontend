@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // +14 green / −14 coral (U+2212, not a hyphen) / — faint when there's no session delta (or the
-// delta rounds to exactly zero — treated the same as "no visible signal", design-spec.md doesn't
-// cover this edge case explicitly). Color-on-transparent, never a filled pill (design-spec.md's
+// delta rounds to exactly zero — treated the same as "no visible signal", DESIGN-SPEC.md doesn't
+// cover this edge case explicitly). Color-on-transparent, never a filled pill (DESIGN-SPEC.md's
 // DeltaBadge spec).
 //
 // Rounds internally, same as RatingNumber: design doc §5.2 keeps rating state double-precision
@@ -16,7 +16,7 @@ const rounded = computed(() => (props.value === null ? null : Math.round(props.v
 <template>
   <span
     class="font-mono font-semibold"
-    :class="!rounded ? 'text-text-faint' : rounded > 0 ? 'text-accent-up' : 'text-accent-down'"
+    :class="!rounded ? 'text-text-faint' : rounded > 0 ? 'text-text-up' : 'text-text-down'"
   >
     <template v-if="!rounded">—</template>
     <template v-else-if="rounded > 0">+{{ rounded }}</template>

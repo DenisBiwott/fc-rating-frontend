@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md §2 "LiveSessionBanner": inset card, green hairline border, a pulsing-radius dot
+// DESIGN-SPEC.md §2 "LiveSessionBanner": inset card, green hairline border, a pulsing-radius dot
 // (no animation — the box-shadow ring is static per the "nothing pulses" motion rule), elapsed
 // time in mono green.
 import { computed } from 'vue'
@@ -11,6 +11,9 @@ const props = defineProps<{
   startedAt: string
   matchCount: number
   biggestMover: { name: string; delta: number } | null
+  /** Desktop (3a): a one-line pill in the header's right corner — name, match count, elapsed.
+   *  No biggest mover; the table's Δ column already shows every mover. */
+  compact?: boolean
 }>()
 
 const now = useNow()
@@ -29,7 +32,23 @@ const biggestMoverDelta = computed(() => {
 
 <template>
   <div
-    class="mx-5 mb-3 flex items-center gap-3 rounded-xl border p-4"
+    v-if="compact"
+    class="flex flex-none items-center gap-[11px] rounded-xl border px-3.5 py-2.5"
+    style="
+      background: linear-gradient(90deg, rgba(52, 211, 153, 0.1), rgba(52, 211, 153, 0.02));
+      border-color: rgba(52, 211, 153, 0.28);
+    "
+  >
+    <span
+      class="h-[7px] w-[7px] flex-none rounded-full bg-accent-up"
+      style="box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.16)"
+    />
+    <span class="text-[13px] font-semibold whitespace-nowrap text-text-primary">{{ sessionName }} · open</span>
+    <span class="font-mono text-[11px] whitespace-nowrap text-text-muted">{{ matchCount }} matches · {{ elapsed }}</span>
+  </div>
+  <div
+    v-else
+    class="mx-5 sm:mx-8 mb-3 flex items-center gap-3 rounded-xl border p-4"
     style="
       background: linear-gradient(90deg, rgba(52, 211, 153, 0.1), rgba(52, 211, 153, 0.02));
       border-color: rgba(52, 211, 153, 0.3);
@@ -47,6 +66,6 @@ const biggestMoverDelta = computed(() => {
         >
       </div>
     </div>
-    <span class="flex-none font-mono text-xs text-accent-up">{{ elapsed }}</span>
+    <span class="flex-none font-mono text-xs text-text-up">{{ elapsed }}</span>
   </div>
 </template>

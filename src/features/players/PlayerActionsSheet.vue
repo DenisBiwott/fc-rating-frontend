@@ -12,6 +12,9 @@ const props = defineProps<{
   name: string
   rank: number | null
   gamesPlayed: number
+  /** Desktop opens the sheet straight at a step from the header's ··· menu (3c); Back/Keep it then
+   *  close it instead of returning to a menu the user never saw. */
+  initialMode?: 'menu' | 'rename' | 'confirm-delete'
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -24,14 +27,24 @@ const router = useRouter()
 const updatePlayer = useUpdatePlayer()
 const deletePlayer = useDeletePlayer()
 
-watch(open, (isOpen) => {
-  if (isOpen) {
-    mode.value = 'menu'
-    renameValue.value = props.name
-    updatePlayer.reset()
-    deletePlayer.reset()
-  }
-})
+// Immediate, because the desktop roster mounts this sheet already open for the row it acts on.
+watch(
+  open,
+  (isOpen) => {
+    if (isOpen) {
+      mode.value = props.initialMode ?? 'menu'
+      renameValue.value = props.name
+      updatePlayer.reset()
+      deletePlayer.reset()
+    }
+  },
+  { immediate: true },
+)
+
+function backToMenu(): void {
+  if ((props.initialMode ?? 'menu') === 'menu') mode.value = 'menu'
+  else open.value = false
+}
 
 async function saveRename(): Promise<void> {
   const trimmed = renameValue.value.trim()
@@ -98,14 +111,14 @@ async function confirmDelete(): Promise<void> {
             :disabled="gamesPlayed > 0"
             @click="mode = 'confirm-delete'"
           >
-            <span class="text-base font-semibold text-accent-down">Delete player</span>
+            <span class="text-base font-semibold text-text-down">Delete player</span>
             <span class="text-[11px] text-text-muted">Only while they have no matches</span>
           </button>
         </div>
 
         <span
           v-if="updatePlayer.isError.value"
-          class="text-xs text-accent-down"
+          class="text-xs text-text-down"
         >
           Could not update player.
         </span>
@@ -129,7 +142,7 @@ async function confirmDelete(): Promise<void> {
           />
           <span
             v-if="updatePlayer.isError.value && updatePlayer.error.value"
-            class="text-xs text-accent-down"
+            class="text-xs text-text-down"
           >
             Could not rename player — the name may already be taken.
           </span>
@@ -142,19 +155,19 @@ async function confirmDelete(): Promise<void> {
         >
           {{ updatePlayer.isPending.value ? 'Saving…' : 'Save' }}
         </button>
-        <button type="button" class="h-13 rounded-[14px] border border-border-default text-base font-semibold text-text-primary" @click="mode = 'menu'">
+        <button type="button" class="h-13 rounded-[14px] border border-border-default text-base font-semibold text-text-primary" @click="backToMenu">
           Back
         </button>
       </div>
 
       <div v-else class="flex flex-col gap-4">
         <div>
-          <span class="font-mono text-[10px] tracking-[0.16em] font-semibold text-accent-down">DELETE PLAYER</span>
+          <span class="font-mono text-[10px] tracking-[0.16em] font-semibold text-text-down">DELETE PLAYER</span>
           <p class="mt-1.5 text-lg font-bold text-text-primary">Delete {{ name }}? This can't be undone.</p>
         </div>
         <span
           v-if="deletePlayer.isError.value && deletePlayer.error.value instanceof DeletePlayerError"
-          class="text-xs text-accent-down"
+          class="text-xs text-text-down"
         >
           {{ deletePlayer.error.value.message }}
         </span>
@@ -166,7 +179,7 @@ async function confirmDelete(): Promise<void> {
         >
           {{ deletePlayer.isPending.value ? 'Deleting…' : 'Delete player' }}
         </button>
-        <button type="button" class="h-13 rounded-[14px] border border-border-default text-base font-semibold text-text-primary" @click="mode = 'menu'">
+        <button type="button" class="h-13 rounded-[14px] border border-border-default text-base font-semibold text-text-primary" @click="backToMenu">
           Keep it
         </button>
       </div>

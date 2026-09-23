@@ -9,8 +9,12 @@ export interface RosterPlayer {
   name: string
   avatarUrl: string | null
   isActive: boolean
+  createdAt: string
   lastPlayedAt: string | null
   gamesPlayed: number | null
+  wins: number | null
+  losses: number | null
+  draws: number | null
   rating: number | null
   isProvisional: boolean | null
   /** The active config's provisional threshold, for the "PROV n/N" badge. */
@@ -21,7 +25,7 @@ export interface RosterPlayer {
 /**
  * GET /leaderboard only includes active players (activePlayerRatings' query filters `where
  * p.is_active`, confirmed reading the backend) — so on the Inactive tab, rating/gamesPlayed/rank
- * stay null rather than triggering a per-player /players/:id fetch just to show a number nobody's
+ * and W-L-D stay null rather than triggering a per-player /players/:id fetch just to show a number nobody's
  * tracking anymore. See the plan's "Design call" note.
  */
 async function fetchPlayersRoster(active: boolean): Promise<RosterPlayer[]> {
@@ -40,8 +44,12 @@ async function fetchPlayersRoster(active: boolean): Promise<RosterPlayer[]> {
       name: player.name,
       avatarUrl: player.avatarUrl,
       isActive: player.isActive,
+      createdAt: player.createdAt,
       lastPlayedAt: player.lastPlayedAt,
       gamesPlayed: row?.gamesPlayed ?? null,
+      wins: row?.wins ?? null,
+      losses: row?.losses ?? null,
+      draws: row?.draws ?? null,
       rating: row?.rating ?? null,
       isProvisional: row?.isProvisional ?? null,
       provisionalGames: leaderboard.ratingConfig.provisionalGames,

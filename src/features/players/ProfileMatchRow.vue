@@ -3,6 +3,7 @@
 // to this player's own perspective by usePlayerMatches.ts, not raw home/away.
 import { computed } from 'vue'
 import DeltaBadge from '@/components/DeltaBadge.vue'
+import { formatPlayedAt } from '@/lib/played-at'
 import ResultChip from '@/components/ResultChip.vue'
 import { useIsAdmin } from '@/queries/useCurrentUser'
 import type { PlayerMatchRow } from '@/queries/usePlayerMatches'
@@ -15,23 +16,12 @@ const emit = defineEmits<{ void: [match: PlayerMatchRow] }>()
 // actually gates the mutation server-side; this is purely a discoverability affordance.
 const isAdmin = useIsAdmin()
 
-// Today's matches show a time ("21:49"); older ones show a short date ("Sep 5") — matches the
-// canvas mockup's own distinction between the live session's rows and an older casual match.
-const timeLabel = computed(() => {
-  const played = new Date(props.match.playedAt)
-  const now = new Date()
-  const sameDay =
-    played.getFullYear() === now.getFullYear() &&
-    played.getMonth() === now.getMonth() &&
-    played.getDate() === now.getDate()
-  return sameDay
-    ? played.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
-    : played.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-})
+// Today's matches show a time ("21:49"); older ones a short date ("Sep 5").
+const timeLabel = computed(() => formatPlayedAt(props.match.playedAt, new Date()))
 </script>
 
 <template>
-  <div class="flex items-center gap-2.75 border-t border-border-hairline px-5 py-2.5">
+  <div class="flex items-center gap-2.75 border-t border-border-hairline px-5 sm:px-8 py-2.5">
     <ResultChip :result="match.result" :size="20" />
     <div class="min-w-0 flex-1">
       <div class="text-sm font-medium text-text-primary">vs {{ match.opponentName }}</div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// design-spec.md's MatchSlot spec. Empty state is a dashed avatar outline and no name; tapping a
+// DESIGN-SPEC.md's MatchSlot spec. Empty state is a dashed avatar outline and no name; tapping a
 // filled slot clears it (grid tiles only ever fill an empty slot, never clear one).
 import AvatarTile from '@/components/AvatarTile.vue'
 import RatingNumber from '@/components/RatingNumber.vue'
@@ -8,6 +8,8 @@ const props = defineProps<{
   label: 'HOME' | 'AWAY'
   name: string | null
   rating: number | null
+  /** The slot the next pick fills (desktop panel, 3a): green border + a soft green ring. */
+  focused?: boolean
 }>()
 
 const emit = defineEmits<{ clear: [] }>()
@@ -16,7 +18,10 @@ const emit = defineEmits<{ clear: [] }>()
 <template>
   <button
     type="button"
-    class="flex min-h-41 flex-1 flex-col items-center gap-2 rounded-2xl bg-bg-raised p-4 disabled:cursor-default"
+    class="flex min-h-41 flex-1 flex-col items-center gap-2 rounded-2xl border bg-bg-raised p-4 disabled:cursor-default"
+    :class="
+      focused ? 'border-accent-up shadow-[0_0_0_3px_rgba(52,211,153,0.14)]' : 'border-transparent'
+    "
     :disabled="!name"
     :aria-label="name ? `Clear ${props.label.toLowerCase()} player ${name}` : `${props.label}, empty`"
     @click="emit('clear')"
