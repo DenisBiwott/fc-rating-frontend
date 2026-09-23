@@ -110,7 +110,10 @@ route (`?home=` pre-fills Home). On desktop it's the leaderboard's docked panel,
 `RecordDrawer` on any other screen. The router guard sends `/record` on a desktop window to the
 panel. It holds only the drawer's open flag, a queued Home pre-fill, and a focus request.
 `RecordMatchForm` is the single form component for both homes (variant `screen` or `panel`). The
-panel variant resets itself on Done, since it outlives a single match. `composables/useTheme.ts` is a second,
+panel variant resets itself on Done, since it outlives a single match. When a match is recorded,
+the form hands its outcome and rank changes to `useRecentMoves` (`features/leaderboard/`), which
+the leaderboard rows read to tint the two players for 4s. That's module-level UI state that clears
+itself, separate from the optimistic cache update that moves the rows. `composables/useTheme.ts` is a second,
 smaller piece — presentation state (which CSS class is on `<html>`), not server data, sitting
 outside the record-match form and outside TanStack Query on purpose.
 

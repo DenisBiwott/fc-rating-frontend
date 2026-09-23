@@ -22,6 +22,7 @@ function mountResult(homeScore: number, awayScore: number) {
       upset: false,
       rankChanges: [],
       sessionContext: null,
+      playedAt: '2026-09-23T21:58:00Z',
     },
   })
 }

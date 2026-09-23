@@ -7,6 +7,7 @@ import DeltaBadge from '@/components/DeltaBadge.vue'
 import FormStrip from '@/components/FormStrip.vue'
 import RatingNumber from '@/components/RatingNumber.vue'
 import { medalFor, rankTextClass, winPctLabel } from './medal'
+import { highlightRowClass, rankMoveLabel, type RowHighlight } from './useRecentMoves'
 
 type MatchResult = 'W' | 'L' | 'D'
 
@@ -24,6 +25,8 @@ const props = defineProps<{
   gamesPlayed: number
   isProvisional: boolean
   provisionalGames: number
+  /** Set for a few seconds after this player's match is recorded (3b). */
+  highlight?: RowHighlight | undefined
 }>()
 
 const medal = computed(() => medalFor(props.rank))
@@ -31,6 +34,8 @@ const rankColorClass = computed(() => rankTextClass(props.rank))
 const unrated = computed(() => props.gamesPlayed === 0)
 const record = computed(() => `${props.wins}-${props.losses}-${props.draws}`)
 const winPct = computed(() => winPctLabel(props.winPct, props.gamesPlayed))
+const move = computed(() => rankMoveLabel(props.highlight))
+const rowTint = computed(() => highlightRowClass(props.highlight))
 </script>
 
 <template>
@@ -41,6 +46,7 @@ const winPct = computed(() => winPctLabel(props.winPct, props.gamesPlayed))
   <RouterLink
     :to="{ name: 'player-profile', params: { id: playerId } }"
     class="flex items-center gap-2.75 border-t border-border-hairline px-5 py-2.25 @min-[640px]:h-[66px] @min-[640px]:gap-3 @min-[640px]:px-8 @min-[640px]:py-0"
+    :class="rowTint"
   >
     <span
       class="w-3.75 flex-none text-right font-mono text-sm font-bold @min-[640px]:w-[22px] @min-[640px]:text-left @min-[640px]:text-[15px]"
@@ -56,6 +62,7 @@ const winPct = computed(() => winPctLabel(props.winPct, props.gamesPlayed))
            every other row — DESIGN-SPEC.md: "Rows must be uniform height". -->
       <div class="flex items-center gap-[7px]">
         <span class="truncate text-[15px] font-semibold text-text-primary @min-[640px]:text-base">{{ name }}</span>
+        <span v-if="move" class="flex-none font-mono text-[11px] font-bold" :class="move.class">{{ move.text }}</span>
         <span
           v-if="isProvisional"
           class="flex-none rounded border border-neutral-quiet px-1 py-px font-mono text-[9px] font-bold tracking-[0.08em] whitespace-nowrap text-text-secondary"

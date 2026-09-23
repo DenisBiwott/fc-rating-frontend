@@ -16,6 +16,7 @@ import PlayerGrid from './PlayerGrid.vue'
 import PreviewLine from './PreviewLine.vue'
 import ResultOverlay from './ResultOverlay.vue'
 import ScoreStepper from './ScoreStepper.vue'
+import { flashRecordedMatch } from '@/features/leaderboard/useRecentMoves'
 import { useRecordLauncher } from './useRecordLauncher'
 import { useRecordMatchForm } from './useRecordMatchForm'
 
@@ -93,6 +94,16 @@ function handleDone(): void {
 }
 
 const sessionLabel = computed(() => session.value?.name ?? '')
+
+// Each newly recorded match marks its two players on the leaderboard for a few seconds (3b). On
+// desktop the table is right beside the panel; on a phone it has usually faded by the time the
+// leaderboard is back on screen, which is fine — it's a desktop-console cue.
+watch(
+  () => form.record.data.value,
+  (data) => {
+    if (data) flashRecordedMatch(data.outcome, data.rankChanges)
+  },
+)
 </script>
 
 <template>
@@ -227,6 +238,8 @@ const sessionLabel = computed(() => session.value?.name ?? '')
       :upset="form.record.data.value.outcome.upset"
       :rank-changes="form.record.data.value.rankChanges"
       :session-context="form.resultSession.value"
+      :played-at="form.record.data.value.match.playedAt"
+      :variant="variant"
       @record-another="form.recordAnother()"
       @done="handleDone"
     />

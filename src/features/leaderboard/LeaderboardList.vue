@@ -5,8 +5,10 @@
 // panel when the full table doesn't fit.
 import type { LeaderboardRow } from '@/queries/useLeaderboard'
 import PlayerRow from './PlayerRow.vue'
+import { useRecentMoves } from './useRecentMoves'
 
 defineProps<{ rows: LeaderboardRow[]; provisionalGames: number }>()
+const recentMoves = useRecentMoves()
 </script>
 
 <template>
@@ -40,6 +42,7 @@ defineProps<{ rows: LeaderboardRow[]; provisionalGames: number }>()
         :games-played="row.gamesPlayed"
         :is-provisional="row.isProvisional"
         :provisional-games="provisionalGames"
+        :highlight="recentMoves.get(row.playerId)"
       />
     </TransitionGroup>
   </div>

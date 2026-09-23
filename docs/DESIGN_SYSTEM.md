@@ -109,7 +109,14 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
   delta row. Debounced 150ms, `aria-live="polite"`.
 - **ResultOverlay** — full-screen, green-cast canvas (`bg-result`, both themes, see Theming),
   `aria-live="assertive"`, ~1.5s auto-linger, dismissible. Player cards: winner green wash,
-  loser coral wash, both neutral grey on a draw. Focus moves to it on open. Returning
+  loser coral wash, both neutral grey on a draw. Two variants: `screen` (phones/tablets, cards side
+  by side, "MATCH n OF {session}" below) and `panel` (desktop 3b, covering only the Record panel:
+  a "Result · MATCH n · time" header and full-width stacked cards). Buttons: Record another plus
+  Done (no Undo; dropped 2026-09-23).
+- **Leaderboard after a result** (3b) — the two players' rows get the green (gained) or coral
+  (lost) wash for 4s, with `▲n` / `▼n` after the name when their rank moved. The rows FLIP into
+  their new order and the ratings tick (the existing two motions). The tint just switches on and
+  off; there's no fade, because §3 allows exactly three animations. Bystanders only FLIP. Focus moves to it on open. Returning
   focus to Confirm on close is specced but not built yet.
 - **Navigation** — `BottomNav` below `lg` (Table / Record FAB / Players; icon + 10px label, FAB
   with a `RECORD` label under it), `DesktopRail` at `lg` and up (88px: FC mark, 52px Record

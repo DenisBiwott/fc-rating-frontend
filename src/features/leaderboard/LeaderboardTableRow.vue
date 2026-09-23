@@ -11,8 +11,18 @@ import { formatPlayedAt } from '@/lib/played-at'
 import type { LeaderboardRow } from '@/queries/useLeaderboard'
 import type { DesktopColumns } from './columns'
 import { medalFor, rankTextClass, winPctLabel } from './medal'
+import { highlightRowClass, rankMoveLabel, type RowHighlight } from './useRecentMoves'
 
-const props = defineProps<{ row: LeaderboardRow; columns: DesktopColumns; provisionalGames: number }>()
+const props = defineProps<{
+  row: LeaderboardRow
+  columns: DesktopColumns
+  provisionalGames: number
+  /** Set for a few seconds after this player's match is recorded (3b). */
+  highlight?: RowHighlight | undefined
+}>()
+const move = computed(() => rankMoveLabel(props.highlight))
+// A tinted row keeps its tint under the cursor; hover only lightens an untinted one.
+const rowTint = computed(() => highlightRowClass(props.highlight) || 'hover:bg-bg-raised')
 
 const now = useNow()
 const unrated = computed(() => props.row.gamesPlayed === 0)
@@ -24,13 +34,15 @@ const last = computed(() =>
 <template>
   <RouterLink
     :to="{ name: 'player-profile', params: { id: row.playerId } }"
-    class="flex h-[58px] items-center border-t border-border-hairline px-7 font-mono text-[13px] hover:bg-bg-raised"
+    class="flex h-[58px] items-center border-t border-border-hairline px-7 font-mono text-[13px]"
+    :class="rowTint"
   >
     <span class="w-10 flex-none text-[15px] font-bold" :class="rankTextClass(row.rank)">{{ row.rank }}</span>
 
     <div class="flex min-w-0 flex-1 items-center gap-3 pr-3 font-sans">
       <AvatarTile :name="row.name" :size="34" :medal="medalFor(row.rank)" :dashed="unrated" />
       <span class="truncate text-[15px] font-semibold text-text-primary">{{ row.name }}</span>
+      <span v-if="move" class="flex-none font-mono text-[11px] font-bold" :class="move.class">{{ move.text }}</span>
       <span
         v-if="row.isProvisional"
         class="flex-none rounded border border-neutral-quiet px-1 py-px font-mono text-[9px] font-bold tracking-[0.08em] whitespace-nowrap text-text-secondary"

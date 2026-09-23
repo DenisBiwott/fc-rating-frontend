@@ -7,9 +7,11 @@ import type { LeaderboardRow } from '@/queries/useLeaderboard'
 import type { DesktopColumns } from './columns'
 import LeaderboardTableRow from './LeaderboardTableRow.vue'
 import { sortRows, type SortKey } from './sort'
+import { useRecentMoves } from './useRecentMoves'
 
 const props = defineProps<{ rows: LeaderboardRow[]; columns: DesktopColumns; provisionalGames: number }>()
 
+const recentMoves = useRecentMoves()
 const sortKey = ref<SortKey>('rating')
 const sortedRows = computed(() => sortRows(props.rows, sortKey.value))
 
@@ -69,6 +71,7 @@ const headers = computed<Header[]>(() => {
         :row="row"
         :columns="columns"
         :provisional-games="provisionalGames"
+        :highlight="recentMoves.get(row.playerId)"
       />
     </TransitionGroup>
 

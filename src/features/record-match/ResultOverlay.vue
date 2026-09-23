@@ -28,6 +28,11 @@ const props = defineProps<{
   upset: boolean
   rankChanges: Array<{ playerId: string; from: number; to: number }>
   sessionContext: { name: string; matchCount: number } | null
+  /** When the match was recorded (the API's playedAt) — the panel header shows its time. */
+  playedAt: string
+  /** `screen`: phone/tablet full-screen result. `panel`: the desktop Record panel (3b) — a
+   *  "Result | MATCH n · time" header and the player cards stacked full width. */
+  variant?: 'screen' | 'panel'
 }>()
 
 const emit = defineEmits<{ recordAnother: []; done: [] }>()
@@ -52,8 +57,23 @@ const loserName = computed(() => (winnerIsHome.value ? props.awayName : props.ho
 const winnerWinProb = computed(() =>
   Math.round((winnerIsHome.value ? props.homeOutcome : props.awayOutcome).expectedScore * 100),
 )
-const homeRankChange = computed(() => props.rankChanges.find((c) => c.playerId === props.homePlayerId))
-const awayRankChange = computed(() => props.rankChanges.find((c) => c.playerId === props.awayPlayerId))
+const isPanel = computed(() => props.variant === 'panel')
+
+const sides = computed(() =>
+  (['home', 'away'] as const).map((side) => {
+    const playerId = side === 'home' ? props.homePlayerId : props.awayPlayerId
+    return {
+      side,
+      name: side === 'home' ? props.homeName : props.awayName,
+      outcome: side === 'home' ? props.homeOutcome : props.awayOutcome,
+      rankChange: props.rankChanges.find((c) => c.playerId === playerId),
+    }
+  }),
+)
+
+const playedTime = computed(() =>
+  new Date(props.playedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }),
+)
 
 function handleKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') emit('recordAnother')
@@ -63,69 +83,79 @@ function handleKeydown(event: KeyboardEvent): void {
 <template>
   <div
     ref="overlayRef"
-    class="absolute inset-0 z-20 flex flex-col items-center overflow-y-auto bg-bg-result px-5 py-8"
+    class="absolute inset-0 z-20 flex flex-col overflow-y-auto bg-bg-result"
+    :class="isPanel ? 'gap-6 px-6 pt-6.5 pb-6' : 'items-center px-5 py-8'"
     role="dialog"
     aria-live="assertive"
     aria-modal="true"
     tabindex="-1"
     @keydown="handleKeydown"
   >
-    <span
-      v-if="upset"
-      class="mb-4 rounded-full bg-accent-up px-3 py-1 font-mono text-xs font-bold tracking-[0.08em] text-accent-up-ink"
-    >
-      UPSET
-    </span>
+    <header v-if="isPanel" class="flex items-center justify-between">
+      <h2 class="text-lg font-bold text-text-primary">Result</h2>
+      <span class="font-mono text-[11px] text-text-result-faint uppercase">
+        <template v-if="sessionContext">Match {{ sessionContext.matchCount }} · </template>{{ playedTime }}
+      </span>
+    </header>
 
-    <p class="font-mono text-[72px] font-bold tracking-[-0.04em] text-text-primary">
-      {{ homeScore }}–{{ awayScore }}
-    </p>
-    <p class="mb-6 text-base text-text-result-meta">
-      <template v-if="!isDraw">{{ winnerName }} beats {{ loserName }} · {{ winnerWinProb }}% to win</template>
-      <template v-else>{{ homeName }} draws {{ awayName }}</template>
-    </p>
-
-    <div class="mb-6 flex w-full max-w-xs gap-3">
-      <div
-        class="flex flex-1 flex-col items-center gap-1 rounded-2xl border p-3"
-        :class="cardClass('home')"
+    <div class="flex flex-col items-center" :class="isPanel ? 'gap-2.5 pt-4.5' : ''">
+      <span
+        v-if="upset"
+        class="bg-accent-up font-mono font-bold text-accent-up-ink"
+        :class="
+          isPanel
+            ? 'rounded-md px-3 py-1.25 text-[11px] tracking-[0.2em]'
+            : 'mb-4 rounded-full px-3 py-1 text-xs tracking-[0.08em]'
+        "
       >
-        <AvatarTile :name="homeName" :size="44" />
-        <span class="text-base text-text-primary">{{ homeName }}</span>
-        <span class="font-mono text-xs text-text-muted">
-          {{ Math.round(homeOutcome.before.rating) }} → {{ Math.round(homeOutcome.after.rating) }}
-          <template v-if="homeRankChange"> · rank {{ homeRankChange.from }} → {{ homeRankChange.to }}</template>
-        </span>
-        <div class="flex items-center gap-2">
-          <RatingNumber :value="homeOutcome.after.rating" class="text-[30px] font-bold text-text-primary" />
-          <DeltaBadge :value="homeOutcome.delta" class="text-sm" />
+        UPSET
+      </span>
+      <p class="font-mono text-[72px] leading-none font-bold tracking-[-0.04em] text-text-primary" :class="isPanel ? '' : 'py-3'">
+        {{ homeScore }}–{{ awayScore }}
+      </p>
+      <p class="text-text-result-meta" :class="isPanel ? 'text-[13px]' : 'mb-6 text-base'">
+        <template v-if="!isDraw">{{ winnerName }} beats {{ loserName }} · {{ winnerWinProb }}% to win</template>
+        <template v-else>{{ homeName }} draws {{ awayName }}</template>
+      </p>
+    </div>
+
+    <!-- Screen: two cards side by side, stacked contents. Panel (3b): full-width cards, one per row. -->
+    <div class="flex w-full" :class="isPanel ? 'flex-col gap-3' : 'mb-6 max-w-xs gap-3'">
+      <div
+        v-for="card in sides"
+        :key="card.side"
+        class="flex rounded-2xl border"
+        :class="[
+          cardClass(card.side),
+          isPanel ? 'items-center gap-3.25 p-3.75' : 'flex-1 flex-col items-center gap-1 p-3',
+        ]"
+      >
+        <AvatarTile :name="card.name" :size="44" />
+        <div :class="isPanel ? 'min-w-0 flex-1' : 'flex flex-col items-center gap-1'">
+          <div class="truncate text-base text-text-primary" :class="isPanel ? 'font-semibold' : ''">{{ card.name }}</div>
+          <div class="font-mono" :class="isPanel ? 'mt-0.5 text-[11px] text-text-result-meta' : 'text-xs text-text-muted'">
+            {{ Math.round(card.outcome.before.rating) }} → {{ Math.round(card.outcome.after.rating) }}
+            <template v-if="card.rankChange"> · rank {{ card.rankChange.from }} → {{ card.rankChange.to }}</template>
+          </div>
         </div>
-      </div>
-      <div
-        class="flex flex-1 flex-col items-center gap-1 rounded-2xl border p-3"
-        :class="cardClass('away')"
-      >
-        <AvatarTile :name="awayName" :size="44" />
-        <span class="text-base text-text-primary">{{ awayName }}</span>
-        <span class="font-mono text-xs text-text-muted">
-          {{ Math.round(awayOutcome.before.rating) }} → {{ Math.round(awayOutcome.after.rating) }}
-          <template v-if="awayRankChange"> · rank {{ awayRankChange.from }} → {{ awayRankChange.to }}</template>
-        </span>
-        <div class="flex items-center gap-2">
-          <RatingNumber :value="awayOutcome.after.rating" class="text-[30px] font-bold text-text-primary" />
-          <DeltaBadge :value="awayOutcome.delta" class="text-sm" />
+        <div :class="isPanel ? 'flex flex-col items-end' : 'flex items-center gap-2'">
+          <RatingNumber
+            :value="card.outcome.after.rating"
+            class="text-[30px] leading-none font-bold tracking-[-0.03em] text-text-primary"
+          />
+          <DeltaBadge :value="card.outcome.delta" class="text-sm font-bold" />
         </div>
       </div>
     </div>
 
     <p
-      v-if="sessionContext"
+      v-if="sessionContext && !isPanel"
       class="mb-6 font-mono text-[10px] tracking-[0.14em] text-text-result-faint uppercase"
     >
       Match {{ sessionContext.matchCount }} of {{ sessionContext.name }}
     </p>
 
-    <div class="mt-auto flex w-full max-w-xs flex-col gap-3">
+    <div class="mt-auto flex w-full flex-col" :class="isPanel ? 'gap-2.5' : 'max-w-xs gap-3'">
       <button
         type="button"
         class="h-14 rounded-2xl bg-accent-up text-[17px] font-bold text-accent-up-ink shadow-[0_12px_30px_-12px_rgba(52,211,153,0.6)]"
@@ -133,7 +163,11 @@ function handleKeydown(event: KeyboardEvent): void {
       >
         Record another
       </button>
-      <button type="button" class="h-13 rounded-2xl border border-border-result-secondary text-text-result-secondary" @click="emit('done')">
+      <button
+        type="button"
+        class="h-13 rounded-2xl border border-border-result-secondary font-semibold text-text-result-secondary"
+        @click="emit('done')"
+      >
         Done
       </button>
     </div>

@@ -109,7 +109,7 @@ browser. Phase 7 (admin — rating-config viewer/rebuild button) is real remaini
 asked for before the hosting push; revisit after hosting is verified live.
 **Turn 3 (desktop & tablet) started 2026-09-23 — Slice 0 done.** Built from the canvas's Turn 3
 (`../FC Rating UI.dc.html`, 3a–3f) and `../DESIGN-SPEC.md` §6, as sequential slices (shell → tablet
-→ desktop table → docked Record panel → result/FLIP/Undo → keyboard → profile → roster → TV).
+→ desktop table → docked Record panel → result/FLIP → keyboard → profile → roster → TV).
 Slice 0: contract synced for the backend's two additions (`createdAt` on `GET /players`, nullable
 `outcome` on `GET /matches` items), mocks updated to match. Also: the theme toggle moved from
 `AdminView` (admin-only) to `AccountBar`, and the default is now always dark rather than following
@@ -142,8 +142,12 @@ caps at 1440. The mock db now ranks unrated players last like the backend does.
 beside the leaderboard (anonymous visitors don't); other screens open it as a right-side drawer
 from the rail's Record button or a profile's "Record with {name}". `/record` on a desktop window
 redirects to the panel, carrying `?home=`. The phone/tablet list now switches layout on its
-*container* width, so it fits beside the panel at 1024px (docs/ARCHITECTURE.md). Result-in-panel
-polish, FLIP tints and Undo are Slice 6.
+*container* width, so it fits beside the panel at 1024px (docs/ARCHITECTURE.md).
+**Slice 6 (result in panel, 3b) done, 2026-09-23.** `ResultOverlay` has a `panel` variant (a
+"Result · MATCH n · time" header and stacked full-width cards). After each recorded match the
+leaderboard tints its two players' rows green/coral with ▲n/▼n for 4s (`useRecentMoves`), while
+the rows FLIP and the ratings tick. **Undo was dropped (Denis, 2026-09-23)**: not built, and the
+secondary action stays Done.
 Build order otherwise lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The product design and
 pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — a
@@ -174,7 +178,8 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   **Decided 2026-09-23 (Turn 3):** a second, small piece of client state, `useRecordLauncher`
   (`src/features/record-match/`), holds where the record form opens on desktop: drawer open, a
   queued Home pre-fill, and a focus request. It's module-level so the router guard, the rail, a
-  profile and the panel share it. A composable, still no Pinia.
+  profile and the panel share it. A composable, still no Pinia. Likewise `useRecentMoves`
+  (`src/features/leaderboard/`): which two rows to tint for 4s after a recorded match.
 - **The record-match flow is one scrolling card** — no wizard, no modal, no login inside it. Tap
   Home/Away slots to fill from a recently-played grid, two score steppers, a debounced (150ms)
   preview line, a full-width Confirm using a client-generated UUID v7 reused verbatim on retry
