@@ -25,12 +25,11 @@ function setup(state: FormState, names = ['Ras', 'Dennis', 'Dave', 'Rico']) {
     incrementScore: vi.fn(),
     decrementScore: vi.fn(),
     submit: vi.fn(async () => {}),
-    reset: vi.fn(),
   }
   const press = (key: string, target: HTMLElement = root, init: KeyboardEventInit = {}) => {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
     Object.defineProperty(event, 'target', { value: target })
-    handleRecordKeydown(event, { form, root, escapeClears: true })
+    handleRecordKeydown(event, { form, root })
     return event
   }
   const focusedName = () => document.activeElement?.getAttribute('aria-label')
@@ -83,10 +82,10 @@ describe('handleRecordKeydown', () => {
     expect(event.defaultPrevented).toBe(true)
   })
 
-  it('Esc clears; typing in a field and modifier combos are left alone', () => {
-    const { press, form, input, focusedName } = setup('selecting')
-    press('Escape')
-    expect(form.reset).toHaveBeenCalledOnce()
+  it('leaves Esc to the drawer; typing in a field and modifier combos are left alone', () => {
+    const { press, input, focusedName } = setup('selecting')
+    const event = press('Escape')
+    expect(event.defaultPrevented).toBe(false)
 
     press('r', input)
     press('r', undefined, { metaKey: true })
@@ -98,6 +97,5 @@ describe('handleRecordKeydown', () => {
     press('ArrowUp')
     press('Escape')
     expect(form.incrementScore).not.toHaveBeenCalled()
-    expect(form.reset).not.toHaveBeenCalled()
   })
 })

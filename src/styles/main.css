@@ -28,6 +28,7 @@
   --text-nav-inactive: #71717a;
   --text-emphasis: #3f3f46;
   --bg-panel: #f4f4f5;
+  --bg-drawer: #f7f7f8;
   --neutral-quiet: #a1a1aa;
   --chart-grid: #e4e4e6;
   --preview-bar-home: #8795a8;
@@ -67,7 +68,8 @@
   --border-nav: #1f1f24; /* BottomNav top border */
   --text-nav-inactive: #6b6b74; /* BottomNav inactive tab */
   --text-emphasis: #d4d4d8; /* between primary and secondary: desktop table W/L/D counts */
-  --bg-panel: #0f0f12; /* docked Record panel / drawer (3a) */
+  --bg-panel: #0f0f12; /* the leaderboard's LATEST column (4a) */
+  --bg-drawer: #111114; /* the Record drawer (4b) */
   --neutral-quiet: #3f3f46; /* unplayed form chip, PROV/UNRATED badge border, chart baseline label */
   --chart-grid: #26262b;
   --preview-bar-home: #4a5568; /* PreviewLine split bar — neutral greys, not the accents */
@@ -104,6 +106,7 @@
   --color-text-nav-inactive: var(--text-nav-inactive);
   --color-text-emphasis: var(--text-emphasis);
   --color-bg-panel: var(--bg-panel);
+  --color-bg-drawer: var(--bg-drawer);
   --color-neutral-quiet: var(--neutral-quiet);
   --color-chart-grid: var(--chart-grid);
   --color-preview-bar-home: var(--preview-bar-home);

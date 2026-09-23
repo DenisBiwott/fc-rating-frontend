@@ -22,6 +22,8 @@ export function useRecordMatch() {
     },
     onSuccess: (data) => {
       applyRecordedMatchOptimistically(queryClient, data.outcome)
+      // The desktop LATEST column (useLatestMatches) picks the new match up from the server.
+      void queryClient.invalidateQueries({ queryKey: ['matches'] })
     },
   })
 }

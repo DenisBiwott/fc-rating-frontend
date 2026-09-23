@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatPlayedAt } from './played-at'
+import { formatJoined, formatPlayedAt } from './played-at'
 
 describe('formatPlayedAt', () => {
   const now = new Date(2026, 8, 23, 22, 0)
@@ -12,5 +12,13 @@ describe('formatPlayedAt', () => {
     const label = formatPlayedAt(new Date(2026, 8, 5, 20, 0).toISOString(), now)
     expect(label).toMatch(/5/)
     expect(label).not.toMatch(/20[:.]00/)
+  })
+})
+
+describe('formatJoined', () => {
+  it('shows the month and year only', () => {
+    const label = formatJoined(new Date(2026, 4, 17, 20, 0).toISOString())
+    expect(label).toMatch(/2026/)
+    expect(label).not.toMatch(/17/)
   })
 })

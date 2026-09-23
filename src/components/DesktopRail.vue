@@ -5,7 +5,7 @@
 // This component owns its breakpoint (hidden below lg), mirroring BottomNav's lg:hidden.
 //
 // Not here yet, by slice: the `R` key hint under Record waits for keyboard shortcuts (a hint with
-// no working key would mislead), and TV is inert until the /tv route exists.
+// no working key would mislead), and TV is inert until the /tv route exists (deferred: CLAUDE.md Scope boundaries).
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import KeyHint from '@/components/KeyHint.vue'
@@ -15,7 +15,7 @@ import { useRecordLauncher } from '@/features/record-match/useRecordLauncher'
 
 const { user, isPending, isAdmin, nextTheme, toggleTheme, logOut } = useAccount()
 const route = useRoute()
-// Admins: focus the docked panel on the leaderboard, open the drawer anywhere else. Anonymous
+// Admins: open the Record drawer (on every page since 4b). Anonymous
 // visitors keep a link to /record, which the router guard turns into a login redirect.
 const { openRecord } = useRecordLauncher()
 const tableActive = computed(() => route.name === 'leaderboard')

@@ -6,7 +6,7 @@ function participant(actualScore: 1 | 0.5 | 0, delta: number) {
   return { before: { rating: 1200 }, after: { rating: 1200 + delta }, expectedScore: 0.5, actualScore, delta }
 }
 
-function mountResult(homeScore: number, awayScore: number) {
+function mountResult(homeScore: number, awayScore: number, variant: 'screen' | 'panel' = 'screen') {
   const home = homeScore > awayScore ? 1 : homeScore < awayScore ? 0 : 0.5
   const away = home === 1 ? 0 : home === 0 ? 1 : 0.5
   return mount(ResultOverlay, {
@@ -23,6 +23,7 @@ function mountResult(homeScore: number, awayScore: number) {
       rankChanges: [],
       sessionContext: null,
       playedAt: '2026-09-23T21:58:00Z',
+      variant,
     },
   })
 }
@@ -46,5 +47,22 @@ describe('ResultOverlay player cards', () => {
 
   it('gives both cards a neutral wash on a draw', () => {
     expect(cardTints(mountResult(2, 2))).toEqual(['neutral', 'neutral'])
+  })
+})
+
+describe('ResultOverlay in the drawer (4b)', () => {
+  it('has no buttons; Escape or a click closes it', async () => {
+    const wrapper = mountResult(3, 1, 'panel')
+    expect(wrapper.findAll('button')).toHaveLength(0)
+
+    await wrapper.trigger('keydown', { key: 'Escape' })
+    await wrapper.trigger('click')
+    expect(wrapper.emitted('done')).toHaveLength(2)
+    expect(wrapper.emitted('recordAnother')).toBeUndefined()
+  })
+
+  it('keeps Record another and Done on the phone screen', () => {
+    const labels = mountResult(3, 1).findAll('button').map((b) => b.text())
+    expect(labels).toEqual(['Record another', 'Done'])
   })
 })

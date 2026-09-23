@@ -12,6 +12,9 @@ const props = defineProps<{
   name: string
   rank: number | null
   gamesPlayed: number
+  /** Desktop opens the sheet straight at a step from the header's ··· menu (3c); Back/Keep it then
+   *  close it instead of returning to a menu the user never saw. */
+  initialMode?: 'menu' | 'rename' | 'confirm-delete'
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -24,14 +27,24 @@ const router = useRouter()
 const updatePlayer = useUpdatePlayer()
 const deletePlayer = useDeletePlayer()
 
-watch(open, (isOpen) => {
-  if (isOpen) {
-    mode.value = 'menu'
-    renameValue.value = props.name
-    updatePlayer.reset()
-    deletePlayer.reset()
-  }
-})
+// Immediate, because the desktop roster mounts this sheet already open for the row it acts on.
+watch(
+  open,
+  (isOpen) => {
+    if (isOpen) {
+      mode.value = props.initialMode ?? 'menu'
+      renameValue.value = props.name
+      updatePlayer.reset()
+      deletePlayer.reset()
+    }
+  },
+  { immediate: true },
+)
+
+function backToMenu(): void {
+  if ((props.initialMode ?? 'menu') === 'menu') mode.value = 'menu'
+  else open.value = false
+}
 
 async function saveRename(): Promise<void> {
   const trimmed = renameValue.value.trim()
@@ -142,7 +155,7 @@ async function confirmDelete(): Promise<void> {
         >
           {{ updatePlayer.isPending.value ? 'Saving…' : 'Save' }}
         </button>
-        <button type="button" class="h-13 rounded-[14px] border border-border-default text-base font-semibold text-text-primary" @click="mode = 'menu'">
+        <button type="button" class="h-13 rounded-[14px] border border-border-default text-base font-semibold text-text-primary" @click="backToMenu">
           Back
         </button>
       </div>
@@ -166,7 +179,7 @@ async function confirmDelete(): Promise<void> {
         >
           {{ deletePlayer.isPending.value ? 'Deleting…' : 'Delete player' }}
         </button>
-        <button type="button" class="h-13 rounded-[14px] border border-border-default text-base font-semibold text-text-primary" @click="mode = 'menu'">
+        <button type="button" class="h-13 rounded-[14px] border border-border-default text-base font-semibold text-text-primary" @click="backToMenu">
           Keep it
         </button>
       </div>

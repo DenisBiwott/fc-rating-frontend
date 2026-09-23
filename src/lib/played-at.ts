@@ -12,3 +12,8 @@ export function formatPlayedAt(iso: string, now: Date): string {
     ? played.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
     : played.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
+
+/** A join date as the profile hero and the roster's Joined column show it: "May 2026". */
+export function formatJoined(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+}

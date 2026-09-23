@@ -3,9 +3,10 @@
 // tinted canvas), UPSET badge, ticking ratings, rank change, then Record another / Done. Focus
 // moves here on open (docs/CLAUDE.md's accessibility non-negotiable) and Escape acts like
 // dismissing back to record another rather than losing the moment entirely.
+// The `panel` variant (the desktop drawer, 4b) has no buttons: the form closes the drawer ~1.5s
+// after it appears, and Escape or a click closes it sooner (`done`).
 import { computed, onMounted, ref } from 'vue'
 import AvatarTile from '@/components/AvatarTile.vue'
-import KeyHint from '@/components/KeyHint.vue'
 import DeltaBadge from '@/components/DeltaBadge.vue'
 import RatingNumber from '@/components/RatingNumber.vue'
 
@@ -31,8 +32,8 @@ const props = defineProps<{
   sessionContext: { name: string; matchCount: number } | null
   /** When the match was recorded (the API's playedAt) — the panel header shows its time. */
   playedAt: string
-  /** `screen`: phone/tablet full-screen result. `panel`: the desktop Record panel (3b) — a
-   *  "Result | MATCH n · time" header and the player cards stacked full width. */
+  /** `screen`: phone/tablet full-screen result. `panel`: the desktop Record drawer (3b/4b) — a
+   *  "Result | MATCH n · time" header, the player cards stacked full width, and no buttons. */
   variant?: 'screen' | 'panel'
 }>()
 
@@ -77,12 +78,12 @@ const playedTime = computed(() =>
 )
 
 function handleKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') emit('recordAnother')
-  // Desktop panel (3b): R records another, as its key hint says.
-  else if (isPanel.value && event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey && !event.altKey) {
-    event.preventDefault()
-    emit('recordAnother')
-  }
+  if (event.key !== 'Escape') return
+  if (isPanel.value) emit('done')
+  else emit('recordAnother')
+}
+function handleClick(): void {
+  if (isPanel.value) emit('done')
 }
 </script>
 
@@ -96,6 +97,7 @@ function handleKeydown(event: KeyboardEvent): void {
     aria-modal="true"
     tabindex="-1"
     @keydown="handleKeydown"
+    @click="handleClick"
   >
     <header v-if="isPanel" class="flex items-center justify-between">
       <h2 class="text-lg font-bold text-text-primary">Result</h2>
@@ -161,15 +163,13 @@ function handleKeydown(event: KeyboardEvent): void {
       Match {{ sessionContext.matchCount }} of {{ sessionContext.name }}
     </p>
 
-    <div class="mt-auto flex w-full flex-col" :class="isPanel ? 'gap-2.5' : 'max-w-xs gap-3'">
+    <div v-if="!isPanel" class="mt-auto flex w-full max-w-xs flex-col gap-3">
       <button
         type="button"
         class="flex h-14 items-center justify-center gap-2.5 rounded-2xl bg-accent-up text-[17px] font-bold text-accent-up-ink shadow-[0_12px_30px_-12px_rgba(52,211,153,0.6)]"
-        :aria-keyshortcuts="isPanel ? 'R' : undefined"
         @click="emit('recordAnother')"
       >
         Record another
-        <KeyHint v-if="isPanel" on-green>R</KeyHint>
       </button>
       <button
         type="button"

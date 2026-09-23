@@ -124,7 +124,7 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
   focus to Confirm on close is specced but not built yet.
 - **Navigation** — `BottomNav` below `lg` (Table / Record FAB / Players; icon + 10px label, FAB
   with a `RECORD` label under it), `DesktopRail` at `lg` and up (88px: FC mark, 52px Record
-  button, Table, Players, account controls, TV). `NavIcon` draws the outlined glyphs in
+  button, Table, Players, account controls, TV — inert until TV mode is built, see CLAUDE.md Scope boundaries). `NavIcon` draws the outlined glyphs in
   `currentColor`. The active item is `text-primary` (plus a `bg-control` fill on the rail), inactive
   is `text-nav-inactive`. Every focusable element gets the global `:focus-visible` ring: 2px
   `accent-up`, offset 2px (`main.css`).
@@ -159,6 +159,35 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
   `border-control` border, or `rgba(4,22,13,0.35)` on green; they sit on the rail's Record, the
   panel's Confirm (`↵`) and Record another (`R`), plus a hint line under Confirm. Buttons carry
   `aria-keyshortcuts`.
+- **Profile, desktop** (3c, `lg`) — "‹ Leaderboard" with "Record with {name}" and `···` (a
+  dropdown: Rename…, Deactivate or Reactivate, Delete player… disabled once they've played) in the header. Then
+  a `460px | 1fr` grid. Left: `PlayerHero large` (avatar 76, name 34, rating 56),
+  `ProfileStats large` (values 22), `RatingChart`. Right: `ProfileMatchTable`, a `bg-nav` card of
+  54px rows (Opponent · Score · Δ · After · Session · When · `···` → Void match…), loaded 20 at a
+  time with "Load older matches". Its columns fit its own width, dropping Session, then When,
+  then After (`historyColumns.ts`). "Open match" isn't built (there's no match screen).
+- **RatingChart** — gridlines every 50 points (100 when the range is wide), y labels, `#first` /
+  `#last` match numbers, an endpoint dot, and the config baseline 1200 dashed. The mock's "1250"
+  was just its lowest gridline, and the phone sparkline dashes 1200 too. The stroke is green or
+  coral by net trend, as on the sparkline.
+- **Roster, desktop** (3d, `lg`) — header: "Players" 30px with `n active · m inactive`, a
+  segmented Active/Inactive control (`aria-pressed`), and "+ Add player". Below it,
+  `RosterTable`: a `bg-nav` card of 60px rows (Player · Rating · W-L-D · Matches · Last played ·
+  Joined · `···`), capped at 1180px. Every column fits from 1024px, so none is dropped. The name
+  link stretches over the row (row click → profile) so the `···` button isn't nested in a link.
+  The row menu has Rename…, Deactivate/Reactivate, and Delete player…, disabled once they've played. An inactive player
+  has no leaderboard entry, so Rating, W-L-D and Matches read "—" and Delete falls back to "no
+  last-played date". Anonymous visitors get a muted `···` and "+ Add player" that lead to login.
+- **Add player** — `AddPlayerForm` in two containers: `AddPlayerSheet` (phone/tablet) and
+  `AddPlayerPopover` (desktop, 360px, anchored under "+ Add player" right-aligned, with an `esc`
+  chip and `↵` on the CTA). Name is focused on open; a duplicate name shows the 409 inline. The
+  provisional note omits the mock's "ranked last until then", since only unrated players rank
+  last. The "Starting rating" override row is not built.
+- **Popover** (`components/ui/popover`, reka) — `bg-raised` surface, `border-control` border,
+  radius 18, deep shadow; Escape, click-outside and focus return to the trigger are built in.
+- **Menus** (`components/ui/dropdown-menu`, reka) — `bg-control` surface, `border-control` border,
+  38px items, and destructive items in coral on a `rgba(244,113,89,0.08)` wash. Keyboard
+  navigation, typeahead and Escape come built in.
 - **Sheets / dialogs** — `SheetContent` is a bottom sheet on phones and a centred dialog (440px,
   fade plus a 4px rise) from `sm` up. Initial focus goes to the first focusable element unless the
   sheet handles `@open-auto-focus` (Add player focuses Name, per spec).

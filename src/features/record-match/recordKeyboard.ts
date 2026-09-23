@@ -1,10 +1,10 @@
-// Desktop keyboard for the Record panel (DESIGN-SPEC.md §6 "Keyboard"). Handles keys pressed while
-// focus is anywhere inside the panel's form:
+// Desktop keyboard for the Record drawer (DESIGN-SPEC.md §6 "Keyboard"). Handles keys pressed while
+// focus is anywhere inside the drawer's form:
 //   ← →        switch the active slot (which slot a pick fills; which score ↑↓ adjusts)
 //   letter     selecting: focus the next player whose name starts with it (↵ then picks them)
 //   ↑ ↓        selecting: move through the players · scoring: change the active side's score
 //   ↵          scoring: confirm (on a focused button, the button's own action runs instead)
-//   Esc        docked panel: clear the form (in the drawer, Esc closes the drawer instead)
+// Esc isn't handled here: reka's Dialog closes the drawer.
 // `R` to open the panel lives outside it (useRecordLauncher's global shortcut), and in the result
 // state the overlay handles its own keys. So inside the panel every letter, R included, picks.
 import type { Ref } from 'vue'
@@ -18,14 +18,11 @@ export interface RecordKeyboardTarget {
   incrementScore(side: Side): void
   decrementScore(side: Side): void
   submit(): Promise<void>
-  reset(): void
 }
 
 export interface RecordKeyboardContext {
   form: RecordKeyboardTarget
   root: HTMLElement
-  /** Docked panel: Esc clears. Drawer: false, so reka's Esc closes the drawer. */
-  escapeClears: boolean
 }
 
 const PLAYER_TILE = 'button[aria-label^="Select "]:not([disabled])'
@@ -88,12 +85,6 @@ export function handleRecordKeydown(event: KeyboardEvent, ctx: RecordKeyboardCon
         event.preventDefault()
         void form.submit()
       }
-      return
-    case 'Escape':
-      if (!ctx.escapeClears) return
-      form.reset()
-      root.focus()
-      event.preventDefault()
       return
   }
 

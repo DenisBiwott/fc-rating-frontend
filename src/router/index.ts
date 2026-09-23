@@ -39,14 +39,14 @@ const router = createRouter({
       path: '/players',
       name: 'players',
       component: () => import('@/features/players/PlayersView.vue'),
-      meta: { layout: 'tablet' },
+      meta: { layout: 'desktop' },
     },
     {
       path: '/players/:id',
       name: 'player-profile',
       component: () => import('@/features/players/PlayerProfileView.vue'),
       props: true,
-      meta: { layout: 'tablet' },
+      meta: { layout: 'desktop' },
     },
     {
       path: '/matches',
@@ -89,8 +89,8 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
-  // On a desktop window, recording happens in the leaderboard's docked panel (DESIGN-SPEC.md §6),
-  // not the full-screen /record route — carry any ?home= pre-fill across.
+  // On a desktop window, recording happens in the Record drawer over the leaderboard
+  // (DESIGN-SPEC.md §6, 4b), not the full-screen /record route — carry any ?home= pre-fill across.
   if (to.name === 'record-match' && window.matchMedia('(min-width: 1024px)').matches) {
     queueDesktopRecord(typeof to.query.home === 'string' ? to.query.home : null)
     return { name: 'leaderboard' }

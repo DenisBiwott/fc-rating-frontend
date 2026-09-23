@@ -178,8 +178,9 @@ export function useRecordMatchForm() {
     state.value = 'done'
   }
 
-  /** Back to an empty form with a fresh match id: the docked panel's Clear and Done, where the
-   *  form outlives a single match (the /record screen instead unmounts on Done). */
+  /** Back to an empty form with a fresh match id: the drawer's result closing, and a Home
+   *  pre-fill, where the form outlives a single match (the /record screen instead unmounts on
+   *  Done). */
   function reset(): void {
     if (debounceTimer) clearTimeout(debounceTimer)
     homePlayerId.value = null

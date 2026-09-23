@@ -153,6 +153,20 @@ secondary action stays Done.
 Record, and inside the panel ← → switch the active slot (new `activeSide` in the form), letters and
 ↑ ↓ pick players, ↑ ↓ set scores, ↵ confirms, Esc clears; `R` on the result is Record another.
 A whole match was recorded by keyboard alone in Chrome (docs/DESIGN_SYSTEM.md#core-components).
+**Slice 8 (desktop profile, 3c) done, 2026-09-23.** From `lg`, the profile has two columns: hero,
+stat tiles and `RatingChart` (axis, gridlines, peak), beside `ProfileMatchTable` (full history,
+cursor-paged, columns fit its width, row `···` → Void). The header `···` is a dropdown (Rename…,
+Deactivate, Delete…) over the same actions dialog. `usePlayerMatches` is now an infinite query
+reading Δ/After from each match's `outcome`, so the rating-history join is gone. shadcn-vue's
+`DropdownMenu` was added. The MSW mock now serves the profile endpoints (see the MSW Scar below).
+**Slice 9 (desktop roster, 3d) done, 2026-09-23.** From `lg`, Players is `RosterTable` (Player ·
+Rating · W-L-D · Matches · Last played · Joined · `···`) capped at 1180px, with a segmented
+Active/Inactive control. "+ Add player" opens `AddPlayerPopover`, which shares `AddPlayerForm`
+with the phone sheet. Row menus: Rename…, Deactivate/Reactivate, Delete player…. Reactivate is
+new (the profile's desktop menu has it too); there was no way to undo a deactivation before.
+shadcn-vue's `Popover` was added. The MSW mock now handles player create/update/delete and
+`?active=`.
+**Slice 10 (TV mode, 3e) deferred, 2026-09-23** — see Scope boundaries for the plan.
 Build order otherwise lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The product design and
 pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — a
@@ -277,12 +291,31 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   mode. Fixed by moving every mode-dependent colour onto tokens (docs/DESIGN_SYSTEM.md#theming).
   The lesson: a surface and the text on it must both be tokens, or both be fixed. Never mix.
 
+- **An MSW `*/…` wildcard also matches the app's own source files.** The browser Service Worker sees
+  every request the page makes, including Vite's module URLs. A new `*/players/:id` handler matched
+  `/src/features/players/PlayerProfileView.vue` and answered the route's lazy import with a "player
+  not found" 404. The profile route then silently never loaded in mock mode: the router aborted
+  the navigation, and the page stayed where it was. Fixed by anchoring every handler to the API
+  base URL (`src/mocks/handlers.ts`). For mock-mode browser checks, also set
+  `VITE_API_BASE=http://localhost.invalid` so nothing a handler misses can reach a real backend.
+
 ## Scope boundaries
 
 Deliberately deferred — flag rather than silently building toward these: player head-to-head
 comparison, what-if rating-config UI (backend API can already support it), seasons, 2v2 matches,
 offline-first / PWA sync queue. See design doc §13 for the intended order if one becomes real
 work.
+
+**Future improvement: TV mode (Turn 3's 3e, the planned Slice 10, deferred by Denis 2026-09-23).**
+Designed in `../DESIGN-SPEC.md` §6 "TV mode" and the canvas's 3e. The plan when it's picked up:
+- a `/tv` route with no chrome (a `fullscreen`-style meta), entered from the rail's TV item;
+- standings refetched every 10s (TanStack Query `refetchInterval`);
+- diff each poll against the previous one, so changed rows FLIP, tint and show ▲/▼ like the
+  desktop leaderboard (`useRecentMoves` holds the same idea for one recorded match);
+- a LATEST column of the last 3 results from `GET /matches`, using each item's `outcome` for
+  deltas and the UPSET badge;
+- `Esc` exits.
+Until then the rail's TV item stays inert ("TV mode — coming soon").
 
 ## Process rules
 

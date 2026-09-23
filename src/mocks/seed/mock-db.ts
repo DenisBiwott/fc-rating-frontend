@@ -5,6 +5,17 @@
 import { computeMatchOutcome, PROVISIONAL_GAMES, resultFor, type MatchOutcome, type MatchResult } from './elo'
 import { seedLeaderboardEntries, seedPlayers, seedSession } from './leaderboard-seed'
 
+// The seed has no join dates; these spread the roster's Joined column over a few months (3d).
+// Anyone not listed joined as this session started.
+const JOINED_MONTHS_AGO: Record<string, number> = { ras: 6, dennis: 6, jason: 5, musya: 5, dave: 4, stan: 4, vin: 1 }
+function joinedAt(playerId: string): string {
+  const monthsAgo = JOINED_MONTHS_AGO[playerId]
+  if (monthsAgo === undefined) return seedSession.startedAt
+  const date = new Date()
+  date.setMonth(date.getMonth() - monthsAgo)
+  return date.toISOString()
+}
+
 interface PlayerState {
   id: string
   name: string
@@ -37,14 +48,40 @@ const players = new Map<string, PlayerState>(
         losses: entry.losses,
         draws: entry.draws,
         form: entry.form,
-        // The seed has no join dates either; everyone is taken to have joined before this session.
-        createdAt: seedSession.startedAt,
+        createdAt: joinedAt(entry.playerId),
         // The seed has no match timestamps; anyone who's played is taken to have played this session.
         lastPlayedAt: entry.gamesPlayed > 0 ? seedSession.startedAt : null,
       },
     ]
   }),
 )
+
+// Two deactivated players so the roster's Inactive tab has content (3d: "8 active · 2 inactive").
+// Otieno has history (so can't be deleted); Kev never played (so can).
+const monthsAgo = (n: number) => {
+  const date = new Date()
+  date.setMonth(date.getMonth() - n)
+  return date.toISOString()
+}
+for (const p of [
+  { id: 'otieno', name: 'Otieno', rating: 1231, wins: 7, losses: 5, draws: 2, form: ['W', 'D', 'L', 'W', 'W'] as MatchResult[], joined: 7, last: 2 },
+  { id: 'kev', name: 'Kev', rating: 1200, wins: 0, losses: 0, draws: 0, form: [] as MatchResult[], joined: 3, last: null },
+]) {
+  players.set(p.id, {
+    id: p.id,
+    name: p.name,
+    avatarUrl: null,
+    isActive: false,
+    rating: p.rating,
+    gamesPlayed: p.wins + p.losses + p.draws,
+    wins: p.wins,
+    losses: p.losses,
+    draws: p.draws,
+    form: p.form,
+    createdAt: monthsAgo(p.joined),
+    lastPlayedAt: p.last === null ? null : monthsAgo(p.last),
+  })
+}
 
 const session = {
   id: seedSession.id,
@@ -88,7 +125,9 @@ function streakFromForm(form: MatchResult[]): { result: MatchResult; length: num
 }
 
 function rankedEntries() {
+  // Like the backend's activePlayerRatings: deactivated players drop out of the standings.
   return [...players.values()]
+    .filter((p) => p.isActive)
     .map((p) => ({
       playerId: p.id,
       rating: p.rating,
@@ -109,9 +148,10 @@ function rankedEntries() {
     .map((entry, index) => ({ rank: index + 1, ...entry }))
 }
 
-export function getPlayers() {
+/** GET /players: every player, or only active/inactive ones when `active` is given. */
+export function getPlayers(active?: boolean) {
   return [...players.values()]
-    .filter((p) => p.isActive)
+    .filter((p) => active === undefined || p.isActive === active)
     .map((p) => ({
       id: p.id,
       name: p.name,
@@ -120,6 +160,56 @@ export function getPlayers() {
       createdAt: p.createdAt,
       lastPlayedAt: p.lastPlayedAt,
     }))
+}
+
+function toPlayerDto(p: PlayerState) {
+  return { id: p.id, name: p.name, avatarUrl: p.avatarUrl, isActive: p.isActive }
+}
+
+function nameTaken(name: string, exceptId?: string): boolean {
+  const lower = name.toLowerCase()
+  return [...players.values()].some((p) => p.id !== exceptId && p.name.toLowerCase() === lower)
+}
+
+/** POST /players. `null` when the name is taken (the handler's 409). */
+export function createPlayer(name: string) {
+  if (nameTaken(name)) return null
+  const player: PlayerState = {
+    id: crypto.randomUUID(),
+    name,
+    avatarUrl: null,
+    isActive: true,
+    rating: 1200,
+    gamesPlayed: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    form: [],
+    createdAt: new Date().toISOString(),
+    lastPlayedAt: null,
+  }
+  players.set(player.id, player)
+  return toPlayerDto(player)
+}
+
+/** PATCH /players/:id. 'not-found' / 'conflict' map to the handler's 404 / 409. */
+export function updatePlayer(id: string, patch: { name?: string; isActive?: boolean }) {
+  const player = players.get(id)
+  if (!player) return 'not-found' as const
+  if (patch.name !== undefined && nameTaken(patch.name, id)) return 'conflict' as const
+  if (patch.name !== undefined) player.name = patch.name
+  if (patch.isActive !== undefined) player.isActive = patch.isActive
+  return toPlayerDto(player)
+}
+
+/** DELETE /players/:id, only for a player who has never played (the backend's 409 otherwise). */
+export function deletePlayer(id: string) {
+  const player = players.get(id)
+  if (!player) return 'not-found' as const
+  if (player.gamesPlayed > 0) return 'conflict' as const
+  players.delete(id)
+  recentlyPlayedOrder = recentlyPlayedOrder.filter((p) => p !== id)
+  return 'deleted' as const
 }
 
 export function getLeaderboardResponse() {
@@ -277,4 +367,85 @@ export function recordMatch(
   const result = { match, outcome, rankChanges }
   recordedById.set(id, { match, outcome })
   return result
+}
+
+// ── Profile endpoints (Turn 3's desktop profile needed them in the browser; Phase 4 had only been
+// verified against the real API). The seed has no match history, so everything below is derived
+// from the matches recorded in this mock session: a profile gains history as you record.
+
+function playerLog(playerId: string) {
+  return matchLog
+    .filter((m) => m.homePlayerId === playerId || m.awayPlayerId === playerId)
+    .sort((a, b) => a.sequence - b.sequence)
+}
+
+function sideOf(match: (typeof matchLog)[number], playerId: string) {
+  const outcome = recordedById.get(match.id)!.outcome
+  return match.homePlayerId === playerId ? outcome.home : outcome.away
+}
+
+export function getSessions() {
+  return [getSessionCurrent()]
+}
+
+export function getRatingHistory(playerId: string) {
+  return playerLog(playerId).map((m) => {
+    const side = sideOf(m, playerId)
+    return {
+      matchId: m.id,
+      sequence: m.sequence,
+      playedAt: m.playedAt,
+      before: side.before.rating,
+      after: side.after.rating,
+      delta: side.delta,
+    }
+  })
+}
+
+export function getPlayerProfile(playerId: string) {
+  const p = players.get(playerId)
+  if (!p) return null
+  let goalsFor = 0
+  let goalsAgainst = 0
+  type Run = { result: MatchResult; length: number }
+  let best = null as Run | null
+  let run = null as Run | null
+  for (const m of playerLog(playerId)) {
+    const isHome = m.homePlayerId === playerId
+    goalsFor += isHome ? m.homeScore : m.awayScore
+    goalsAgainst += isHome ? m.awayScore : m.homeScore
+    const result = resultFor(sideOf(m, playerId).actualScore)
+    run = run?.result === result ? { result, length: run.length + 1 } : { result, length: 1 }
+    if (!best || run.length > best.length) best = run
+  }
+  const streak = streakFromForm(p.form)
+  return {
+    playerId: p.id,
+    name: p.name,
+    isActive: p.isActive,
+    createdAt: p.createdAt,
+    rating: p.rating,
+    gamesPlayed: p.gamesPlayed,
+    wins: p.wins,
+    draws: p.draws,
+    losses: p.losses,
+    form: p.form,
+    streak,
+    bestStreak: best ?? streak,
+    goalsFor,
+    goalsAgainst,
+    isProvisional: p.gamesPlayed < PROVISIONAL_GAMES,
+  }
+}
+
+/** GET /matches?playerId=, newest first, paged by `sequence` like the backend's cursor. */
+export function getPlayerMatches(playerId: string, limit: number, cursor: number | null) {
+  const all = playerLog(playerId)
+    .reverse()
+    .filter((m) => cursor === null || m.sequence < cursor)
+  const page = all.slice(0, limit)
+  return {
+    items: page.map((m) => ({ ...m, isVoid: false, outcome: recordedById.get(m.id)?.outcome ?? null })),
+    nextCursor: all.length > limit ? (page.at(-1)?.sequence ?? null) : null,
+  }
 }

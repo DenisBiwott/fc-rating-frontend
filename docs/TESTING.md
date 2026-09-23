@@ -13,7 +13,13 @@ Vitest + Vue Test Utils + MSW. Focus areas, roughly in priority order:
    light and nothing is stored yet (`useTheme.spec.ts`).
 
 MSW handlers back all of the above against the seeded in-memory store described in
-[ARCHITECTURE.md](ARCHITECTURE.md#contract-sync) — tests should exercise the real query hooks
+[ARCHITECTURE.md](ARCHITECTURE.md#contract-sync). Every handler is anchored to the API base URL
+(`${API}/players/:id`), never a `*/` wildcard; see CLAUDE.md's Scar. The profile endpoints
+(`/players/:id`, rating history, `/matches?playerId=` with cursor paging, `/sessions`) are derived
+from matches recorded during the mock session, since the seed has no match history. Players can
+be created, renamed, (de)activated and deleted (409 on a taken name, or deleting someone who has
+played), and `GET /players?active=` filters; the seed adds two inactive players (Otieno, who has
+played, and Kev, who hasn't) and spreads join dates over a few months — tests should exercise the real query hooks
 against mocked network responses, not mock the query hooks themselves. `src/test-setup.ts` runs
 the same `handlers` array against an `msw/node` server rather than a browser Service Worker, reset
 between tests (`server.resetHandlers()` + `queryClient.clear()`). Two things make this work that

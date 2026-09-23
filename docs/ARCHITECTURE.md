@@ -63,8 +63,10 @@ the theme toggle can't drift apart between the two.
 from `sm`, `tablet` from `lg`. A `desktop` screen is only held to DESIGN-SPEC.md §6's page cap:
 1440px minus the 88px rail (1352px), centred. That way no screen stretches edge to edge
 before it has been designed to (600px is the old phone card's width; the card frame is gone).
-Turn 3 moves screens up one slice at a time. At the moment the leaderboard is `desktop`, the players roster and
-player profile are `tablet`, record-match, login and the 404 stay `phone`. A form gains nothing
+Turn 3 moves screens up one slice at a time. At the moment the leaderboard, player profile and
+players roster are `desktop` (the roster also caps itself at 1180px), while record-match, admin,
+login and the 404 stay `phone`. No route uses `tablet` now; it stays available for the next screen
+that gets a tablet design before a desktop one. A form gains nothing
 from a wide column, so record-match may simply stay that way. Tablet gutters are 32px (`sm:px-8`)
 where phone gutters are 20px (`px-5`).
 

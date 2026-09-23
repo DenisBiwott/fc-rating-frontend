@@ -1,5 +1,5 @@
 // Which desktop-table columns fit a given table width (DESIGN-SPEC.md §6, 3a). Measured on the
-// table itself, not the viewport, so the same rule covers "no Record panel" and "panel docked".
+// table itself, not the viewport, so the same rule covers any width the LATEST column leaves it.
 // When space runs out, columns go in the order agreed for Turn 3: Last first, then MP, then W/L/D
 // merge into one W-L-D column. Below that the table doesn't fit at all and the leaderboard falls
 // back to the tablet (3f) rows.

@@ -5,17 +5,17 @@
 // mean sits near the baseline by construction, so it told players nothing. It says how much has
 // been played and how recently — who leads is already the first row right below it.
 //
-// Desktop (§6, 3a): the table column plus, for admins, the Record panel docked on the right.
-// The table column picks its own columns from its measured width (columns.ts); if even the leanest
-// table doesn't fit (1024px with the panel docked), it shows the compact list instead.
+// Desktop (§6, 4a): the table column plus the LATEST column on the right, for everyone. Recording
+// happens in the drawer (RecordDrawer), which slides over LATEST. The table column picks its own
+// columns from its measured width (columns.ts); if even the leanest table doesn't fit (1024px
+// beside LATEST), it shows the compact list instead.
 import { computed, ref } from 'vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useElementWidth } from '@/composables/useElementWidth'
 import { useNow } from '@/composables/useNow'
-import RecordMatchForm from '@/features/record-match/RecordMatchForm.vue'
-import { useIsAdmin } from '@/queries/useCurrentUser'
 import { useLeaderboard } from '@/queries/useLeaderboard'
 import { columnsForWidth } from './columns'
+import LatestMatches from './LatestMatches.vue'
 import LeaderboardList from './LeaderboardList.vue'
 import LeaderboardTable from './LeaderboardTable.vue'
 import LiveSessionBanner from './LiveSessionBanner.vue'
@@ -24,7 +24,6 @@ import { leaderboardSummary } from './summary'
 const { data, isPending, isError } = useLeaderboard()
 const now = useNow()
 const isDesktop = useIsDesktop()
-const isAdmin = useIsAdmin()
 
 const summary = computed(() =>
   data.value
@@ -45,7 +44,7 @@ const tableColumns = computed(() => columnsForWidth(tableWidth.value))
   <section class="flex h-full flex-none flex-col *:shrink-0" :class="isDesktop ? '' : 'pb-6'">
     <div v-if="isDesktop" class="flex h-full">
       <div ref="tableColumn" class="flex min-w-0 flex-1 flex-col overflow-y-auto *:shrink-0">
-        <!-- Wraps the session pill under the title when the column is narrow (panel docked at
+        <!-- Wraps the session pill under the title when the column is narrow (beside LATEST at
              1024px) rather than squeezing the summary line onto three lines. -->
         <header class="flex flex-wrap items-end justify-between gap-x-5 gap-y-3 px-7 pt-7.5 pb-5">
           <div class="min-w-0">
@@ -76,15 +75,7 @@ const tableColumns = computed(() => columnsForWidth(tableWidth.value))
         </template>
       </div>
 
-      <!-- Admin only: anonymous visitors get the table at full width (Turn 3 decision). `relative`
-           here, not on the scrolling form, so the result overlay stays put (RecordMatchForm). -->
-      <aside
-        v-if="isAdmin"
-        aria-label="Record match"
-        class="relative w-105 flex-none overflow-hidden border-l border-border-nav"
-      >
-        <RecordMatchForm variant="panel" />
-      </aside>
+      <LatestMatches />
     </div>
 
     <template v-else>

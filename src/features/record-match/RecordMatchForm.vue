@@ -2,12 +2,12 @@
 // The record-match form, one component for both places it lives (DESIGN-SPEC.md §4 and §6):
 //   - `screen`: the full-screen /record route on phones and tablets. Cancel | Record match |
 //     session header, 5-column "Recently played" grid; Cancel and Done leave via `exit`.
-//   - `panel`: the desktop docked panel (3a) and its drawer form. "Record match" with the session
-//     and Clear on the right, a 4-column "All players · recent first" grid, the next slot to fill
-//     highlighted. The form outlives a match here, so Done resets it and emits `done`.
+//   - `panel`: the desktop Record drawer (4b, RecordDrawer). "Record match" with the session and an
+//     esc chip on the right, a 4-column "All players · recent first" grid, the next slot to fill
+//     highlighted. After Confirm the result plays for ~1.5s, then `done` closes the drawer.
 // Both: one scrolling card, no wizard, no login, Confirm pinned in a footer so it's always on
 // screen and the only green button in view.
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import KeyHint from '@/components/KeyHint.vue'
 import { useCurrentSession } from '@/queries/useCurrentSession'
 import { useLeaderboard } from '@/queries/useLeaderboard'
@@ -26,10 +26,8 @@ const props = withDefaults(
   defineProps<{
     variant?: 'screen' | 'panel'
     initialHomePlayerId?: string | null
-    /** The panel shown as a drawer: Esc closes the drawer rather than clearing the form. */
-    inDrawer?: boolean
   }>(),
-  { variant: 'screen', initialHomePlayerId: null, inDrawer: false },
+  { variant: 'screen', initialHomePlayerId: null },
 )
 const emit = defineEmits<{ exit: []; done: [] }>()
 
@@ -67,7 +65,7 @@ const highlightedSlot = computed(() =>
 const canCancel = computed(() => form.state.value === 'selecting' || form.state.value === 'scoring')
 
 // Pre-fill Home: from the /record route's ?home= on phones, or from the launcher on desktop (the
-// rail's Record button, "Record with {name}", or /record redirected to the docked panel).
+// rail's Record button, "Record with {name}", or /record redirected to the drawer).
 const launcher = useRecordLauncher()
 const root = ref<HTMLElement | null>(null)
 
@@ -76,19 +74,33 @@ function prefillHome(playerId: string): void {
   form.selectPlayer(playerId)
 }
 
+// Move focus into the drawer, onto the first pickable player (where the next pick goes). An empty
+// slot is a disabled button and can't take focus. On the first open the players are still loading,
+// so there's no tile yet: focus the first one once they arrive.
+let focusWhenLoaded = false
+function focusFirstPlayer(): void {
+  const tile = root.value?.querySelector<HTMLElement>('button[aria-label^="Select "]:not([disabled])')
+  focusWhenLoaded = !tile
+  tile?.focus()
+}
+watch(playersPending, async (pending) => {
+  if (pending || !focusWhenLoaded) return
+  await nextTick()
+  focusFirstPlayer()
+})
+
 function applyLauncherRequest(): void {
   if (!isPanel.value) return
   const home = launcher.takePendingHome()
   if (home) prefillHome(home)
-  // Move focus into the panel, onto the first pickable player (where the next pick goes). An
-  // empty slot is a disabled button and can't take focus.
-  root.value?.querySelector<HTMLElement>('button[aria-label^="Select "]:not([disabled])')?.focus()
+  focusFirstPlayer()
 }
 
-// Desktop keyboard (recordKeyboard.ts). Panel only; a phone has no keyboard to speak of.
+// Desktop keyboard (recordKeyboard.ts). Panel only; a phone has no keyboard to speak of. Esc is
+// left to the drawer, which closes.
 function onKeydown(event: KeyboardEvent): void {
   if (!isPanel.value || !root.value) return
-  handleRecordKeydown(event, { form, root: root.value, escapeClears: !props.inDrawer })
+  handleRecordKeydown(event, { form, root: root.value })
 }
 
 // A picked tile becomes disabled, and a disabled element drops focus to <body>: keyboard input
@@ -102,7 +114,7 @@ watch(selectedIds, async () => {
   const lost = !focused || focused === document.body || (focused instanceof HTMLButtonElement && focused.disabled)
   if (!lost) return
   if (form.state.value === 'scoring') confirmButton.value?.focus()
-  else root.value?.querySelector<HTMLElement>('button[aria-label^="Select "]:not([disabled])')?.focus()
+  else focusFirstPlayer()
 })
 
 onMounted(() => {
@@ -111,8 +123,43 @@ onMounted(() => {
 })
 watch(launcher.focusRequests, applyLauncherRequest)
 
+// Each newly recorded match marks its two players on the leaderboard, and its LATEST card, for a
+// few seconds (3b, 4a). In the drawer that waits until the drawer closes, since the scrim would
+// hide most of it; on a phone it fires straight away (and has usually faded by the time the
+// leaderboard is back on screen, which is fine — it's a desktop-console cue).
+let flashedMatchId: string | null = null
+function flashResult(): void {
+  const data = form.record.data.value
+  if (!data || flashedMatchId === data.match.id) return
+  flashedMatchId = data.match.id
+  flashRecordedMatch(data.match.id, data.outcome, data.rankChanges)
+}
+watch(
+  () => form.record.data.value,
+  (data) => {
+    if (data && !isPanel.value) flashResult()
+  },
+)
+
+// Drawer (4b): the result plays for ~1.5s, then the drawer closes on its own. Esc or a click on the
+// result closes it sooner, and so does the drawer's own Esc/scrim close, which unmounts this form.
+const RESULT_LINGER_MS = 1500
+let lingerTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  () => form.state.value,
+  (state) => {
+    if (isPanel.value && state === 'result') lingerTimer = setTimeout(handleDone, RESULT_LINGER_MS)
+  },
+)
+onBeforeUnmount(() => {
+  clearTimeout(lingerTimer)
+  if (isPanel.value && form.state.value === 'result') flashResult()
+})
+
 function handleDone(): void {
   if (isPanel.value) {
+    clearTimeout(lingerTimer)
+    flashResult()
     form.reset()
     emit('done')
   } else {
@@ -122,16 +169,6 @@ function handleDone(): void {
 }
 
 const sessionLabel = computed(() => session.value?.name ?? '')
-
-// Each newly recorded match marks its two players on the leaderboard for a few seconds (3b). On
-// desktop the table is right beside the panel; on a phone it has usually faded by the time the
-// leaderboard is back on screen, which is fine — it's a desktop-console cue.
-watch(
-  () => form.record.data.value,
-  (data) => {
-    if (data) flashRecordedMatch(data.outcome, data.rankChanges)
-  },
-)
 </script>
 
 <template>
@@ -143,21 +180,14 @@ watch(
     data-record-form
     tabindex="-1"
     class="flex h-full flex-none flex-col overflow-y-auto *:shrink-0 focus:outline-none"
-    :class="isPanel ? 'bg-bg-panel px-1 pt-6' : ''"
+    :class="isPanel ? 'bg-bg-drawer px-1 pt-6' : ''"
     @keydown="onKeydown"
   >
     <header v-if="isPanel" class="flex items-center justify-between gap-3 px-5 pb-4">
       <h2 class="text-lg font-bold text-text-primary">Record match</h2>
       <div class="flex min-w-0 items-center gap-3">
         <span class="truncate font-mono text-[11px] text-text-up-bright uppercase">{{ sessionLabel }}</span>
-        <button
-          type="button"
-          class="flex-none text-[13px] text-text-secondary hover:text-text-primary disabled:opacity-40"
-          :disabled="!canCancel"
-          @click="form.reset()"
-        >
-          Clear
-        </button>
+        <KeyHint>esc</KeyHint>
       </div>
     </header>
     <header v-else class="flex items-center justify-between px-5 py-4">
@@ -240,7 +270,7 @@ watch(
          when the form is shorter than its container. -->
     <footer
       class="sticky bottom-0 mt-auto flex flex-col gap-3 border-t border-border-hairline px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
-      :class="isPanel ? 'bg-bg-panel' : 'bg-bg-canvas'"
+      :class="isPanel ? 'bg-bg-drawer' : 'bg-bg-canvas'"
     >
       <p v-if="form.submitError.value" role="alert" class="text-sm text-text-down">
         {{ form.submitError.value }} —
@@ -258,7 +288,7 @@ watch(
         <KeyHint v-if="isPanel" on-green>↵</KeyHint>
       </button>
       <p v-if="isPanel" class="text-center font-mono text-[10px] text-text-faint">
-        ← → side · ↑ ↓ score · ↵ confirm · esc {{ inDrawer ? 'close' : 'clear' }}
+        ← → side · ↑ ↓ score · ↵ confirm · esc close
       </p>
     </footer>
 

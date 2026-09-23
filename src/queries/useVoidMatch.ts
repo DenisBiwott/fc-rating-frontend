@@ -18,6 +18,7 @@ export function useVoidMatch() {
       // fetchQuery forces a real leaderboard refetch before dependent queries invalidate.
       await queryClient.fetchQuery(leaderboardQueryOptions)
       await queryClient.invalidateQueries({ queryKey: ['players'] })
+      await queryClient.invalidateQueries({ queryKey: ['matches'] })
       await Promise.all(
         data.affectedPlayers.map((playerId) =>
           queryClient.invalidateQueries({ queryKey: ['players', playerId] }),

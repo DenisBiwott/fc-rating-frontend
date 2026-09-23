@@ -1,7 +1,8 @@
 // After a match is recorded, the leaderboard marks its two players for a few seconds
 // (DESIGN-SPEC.md §6 "Result (in panel)", 3b): a green wash for whoever gained rating, a coral wash
 // for whoever lost it, and ▲n / ▼n when their rank moved. The rows themselves reorder with the
-// existing FLIP and their ratings tick. Module-level so the form that records the match and the
+// existing FLIP and their ratings tick. The match's own card in the LATEST column (4a) gets a
+// green wash for the same few seconds. Module-level so the form that records the match and the
 // leaderboard rows that show it can share it without passing anything through the router.
 import { readonly, ref } from 'vue'
 
@@ -20,9 +21,11 @@ interface RecordedSide {
 }
 
 const highlights = ref(new Map<string, RowHighlight>())
+const highlightedMatchId = ref<string | null>(null)
 let clearTimer: ReturnType<typeof setTimeout> | undefined
 
 export function flashRecordedMatch(
+  matchId: string,
   outcome: { home: RecordedSide; away: RecordedSide },
   rankChanges: ReadonlyArray<{ playerId: string; from: number; to: number }>,
 ): void {
@@ -35,15 +38,22 @@ export function flashRecordedMatch(
     })
   }
   highlights.value = next
+  highlightedMatchId.value = matchId
 
   if (clearTimer) clearTimeout(clearTimer)
   clearTimer = setTimeout(() => {
     highlights.value = new Map()
+    highlightedMatchId.value = null
   }, HIGHLIGHT_MS)
 }
 
 export function useRecentMoves() {
   return readonly(highlights)
+}
+
+/** The just-recorded match, for its LATEST card's wash; null once the highlight has faded. */
+export function useHighlightedMatch() {
+  return readonly(highlightedMatchId)
 }
 
 /** Row background: 3b's green / coral washes (alpha tints, so they read on either theme). */
