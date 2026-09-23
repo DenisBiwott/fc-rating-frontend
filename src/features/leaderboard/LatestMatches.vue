@@ -23,7 +23,10 @@ const now = useNow()
 
 function when(match: LatestMatch): string {
   const played = new Date(match.playedAt)
-  const time = now.value - played.getTime() < 60_000 ? 'just now' : formatPlayedAt(match.playedAt, new Date(now.value))
+  const time =
+    now.value - played.getTime() < 60_000
+      ? 'just now'
+      : formatPlayedAt(match.playedAt, new Date(now.value))
   return match.sessionName ? `${time} · ${match.sessionName}` : time
 }
 
@@ -38,14 +41,21 @@ const cards = computed(() => matches.value ?? [])
 </script>
 
 <template>
-  <aside aria-label="Latest matches" class="flex h-full w-105 flex-none flex-col gap-2.5 border-l border-border-nav bg-bg-panel px-6 pt-7.5 pb-6">
+  <aside
+    aria-label="Latest matches"
+    class="flex h-full w-105 flex-none flex-col gap-2.5 border-l border-border-nav bg-bg-panel px-6 pt-7.5 pb-6"
+  >
     <header class="flex items-baseline justify-between pb-1">
-      <h2 class="text-lg font-bold text-text-primary">Latest</h2>
-      <span class="font-mono text-[10px] tracking-[0.14em] text-text-faint">LAST {{ LATEST_COUNT }} · ALL SESSIONS</span>
+      <!-- <h2 class="text-lg font-medium text-text-primary">Latest</h2> -->
+      <span class="font-mono text-[10px] tracking-[0.14em] text-text-faint"
+        >LAST {{ LATEST_COUNT }} · ALL SESSIONS</span
+      >
     </header>
 
     <p v-if="isPending" class="font-mono text-xs text-text-muted">Loading…</p>
-    <p v-else-if="isError" class="font-mono text-xs text-text-down">Couldn't load the latest matches.</p>
+    <p v-else-if="isError" class="font-mono text-xs text-text-down">
+      Couldn't load the latest matches.
+    </p>
     <p v-else-if="cards.length === 0" class="font-mono text-xs text-text-muted">No matches yet.</p>
 
     <TransitionGroup
@@ -76,14 +86,20 @@ const cards = computed(() => matches.value ?? [])
         </div>
         <div class="flex items-start justify-between gap-2.5">
           <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span class="truncate text-[17px]" :class="nameClass(match, 'home')">{{ match.home.name }}</span>
+            <span class="truncate text-[17px]" :class="nameClass(match, 'home')">{{
+              match.home.name
+            }}</span>
             <DeltaBadge :value="match.home.delta" class="text-[11px]" />
           </div>
-          <span class="flex-none font-mono text-[26px] leading-none font-bold tracking-[-0.03em] text-text-primary tabular-nums">
+          <span
+            class="flex-none font-mono text-[26px] leading-none font-bold tracking-[-0.03em] text-text-primary tabular-nums"
+          >
             {{ match.home.score }}–{{ match.away.score }}
           </span>
           <div class="flex min-w-0 flex-1 flex-col items-end gap-0.5">
-            <span class="max-w-full truncate text-[17px]" :class="nameClass(match, 'away')">{{ match.away.name }}</span>
+            <span class="max-w-full truncate text-[17px]" :class="nameClass(match, 'away')">{{
+              match.away.name
+            }}</span>
             <DeltaBadge :value="match.away.delta" class="text-[11px]" />
           </div>
         </div>
