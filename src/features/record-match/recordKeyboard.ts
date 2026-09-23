@@ -1,12 +1,13 @@
 // Desktop keyboard for the Record drawer (DESIGN-SPEC.md §6 "Keyboard"). Handles keys pressed while
 // focus is anywhere inside the drawer's form:
 //   ← →        switch the active slot (which slot a pick fills; which score ↑↓ adjusts)
-//   letter     selecting: focus the next player whose name starts with it (↵ then picks them)
+//   letter     selecting: open the name filter with that letter typed in (4c; PlayerFilter then
+//              handles ↑ ↓ ↵ Esc itself, and every key typed into its field is left alone here)
 //   ↑ ↓        selecting: move through the players · scoring: change the active side's score
 //   ↵          scoring: confirm (on a focused button, the button's own action runs instead)
 // Esc isn't handled here: reka's Dialog closes the drawer.
 // `R` to open the panel lives outside it (useRecordLauncher's global shortcut), and in the result
-// state the overlay handles its own keys. So inside the panel every letter, R included, picks.
+// state the overlay handles its own keys. So inside the drawer every letter, R included, filters.
 import type { Ref } from 'vue'
 import type { FormState, Side } from './useRecordMatchForm'
 
@@ -23,16 +24,14 @@ export interface RecordKeyboardTarget {
 export interface RecordKeyboardContext {
   form: RecordKeyboardTarget
   root: HTMLElement
+  /** Open the name filter, pre-filled with the letter just typed. */
+  openFilter(initial: string): void
 }
 
 const PLAYER_TILE = 'button[aria-label^="Select "]:not([disabled])'
 
 function playerTiles(root: HTMLElement): HTMLButtonElement[] {
   return [...root.querySelectorAll<HTMLButtonElement>(PLAYER_TILE)]
-}
-
-function tileName(tile: HTMLElement): string {
-  return (tile.getAttribute('aria-label') ?? '').slice('Select '.length)
 }
 
 /** Focus the next tile after the focused one that matches, wrapping around. */
@@ -89,9 +88,7 @@ export function handleRecordKeydown(event: KeyboardEvent, ctx: RecordKeyboardCon
   }
 
   if (state === 'selecting' && /^[a-z]$/i.test(event.key)) {
-    const letter = event.key.toLowerCase()
-    if (focusNextTile(root, (tile) => tileName(tile).toLowerCase().startsWith(letter), 1)) {
-      event.preventDefault()
-    }
+    event.preventDefault()
+    ctx.openFilter(event.key)
   }
 }

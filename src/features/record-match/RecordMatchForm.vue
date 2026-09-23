@@ -13,7 +13,9 @@ import { useCurrentSession } from '@/queries/useCurrentSession'
 import { useLeaderboard } from '@/queries/useLeaderboard'
 import { useRecentlyPlayedPlayers } from '@/queries/useRecentlyPlayedPlayers'
 import MatchSlot from './MatchSlot.vue'
+import PlayerFilter, { type FilterPlayerInfo } from './PlayerFilter.vue'
 import PlayerGrid from './PlayerGrid.vue'
+import { orderForPicker } from './playerPicker'
 import PreviewLine from './PreviewLine.vue'
 import { handleRecordKeydown } from './recordKeyboard'
 import ResultOverlay from './ResultOverlay.vue'
@@ -40,6 +42,19 @@ const isPanel = computed(() => props.variant === 'panel')
 const ratingByPlayerId = computed(() => {
   const map = new Map<string, number>()
   for (const row of leaderboard.value?.rows ?? []) map.set(row.playerId, row.rating)
+  return map
+})
+// "Tonight, then recent" (playerPicker.ts): the grid's first two rows and the filter's order.
+const orderedPlayers = computed(() => orderForPicker(players.value ?? []))
+// The filter rows' rating and PROV/UNRATED badge, from the leaderboard.
+const infoByPlayerId = computed(() => {
+  const map = new Map<string, FilterPlayerInfo>()
+  const provisionalGames = leaderboard.value?.ratingConfig.provisionalGames ?? 0
+  for (const row of leaderboard.value?.rows ?? []) {
+    const badge =
+      row.gamesPlayed === 0 ? 'UNRATED' : row.isProvisional ? `PROV ${row.gamesPlayed}/${provisionalGames}` : null
+    map.set(row.playerId, { rating: row.rating, badge })
+  }
   return map
 })
 const nameByPlayerId = computed(() => {
@@ -96,22 +111,53 @@ function applyLauncherRequest(): void {
   focusFirstPlayer()
 }
 
+// The name filter (4c/4d) replaces the grid while open: from the All tile, or in the drawer from
+// typing any letter. It only makes sense while a slot is empty, so it closes once both are filled.
+const filterOpen = ref(false)
+const filterInitial = ref('')
+function openFilter(initial = ''): void {
+  if (form.state.value !== 'selecting') return
+  filterInitial.value = initial
+  filterOpen.value = true
+}
+function pickFromFilter(playerId: string): void {
+  form.selectPlayer(playerId)
+  filterOpen.value = false
+}
+function closeFilter(): void {
+  filterOpen.value = false
+  if (isPanel.value) void nextTick(focusFirstPlayer)
+}
+watch(
+  () => form.state.value,
+  (state) => {
+    if (state !== 'selecting') filterOpen.value = false
+  },
+)
+// Phones: while filtering, the slots shrink to one line and the stepper and Confirm step aside so
+// the list sits between the slots and the on-screen keyboard (4d).
+const phoneFiltering = computed(() => filterOpen.value && !isPanel.value)
+
 // Desktop keyboard (recordKeyboard.ts). Panel only; a phone has no keyboard to speak of. Esc is
-// left to the drawer, which closes.
+// left to the drawer, which closes (or, in the filter's field, back to the grid).
 function onKeydown(event: KeyboardEvent): void {
-  if (!isPanel.value || !root.value) return
-  handleRecordKeydown(event, { form, root: root.value })
+  if (!isPanel.value || !root.value || filterOpen.value) return
+  handleRecordKeydown(event, { form, root: root.value, openFilter })
 }
 
-// A picked tile becomes disabled, and a disabled element drops focus to <body>: keyboard input
-// would then leave the panel. Keep focus in it: on the next pickable player while selecting, on
-// Confirm once both players are in (so ↵ confirms and ↑/↓ still reach the panel).
+// A picked tile becomes disabled, and a disabled element drops focus to <body>; picking from the
+// name filter removes its field, and reka's focus trap then parks focus on the drawer itself. Either
+// way keyboard input would leave the form. Keep focus in it: on the next pickable player while
+// selecting, on Confirm once both players are in (so ↵ confirms and ↑/↓ still reach the form).
 const confirmButton = ref<HTMLButtonElement | null>(null)
 watch(selectedIds, async () => {
   if (!isPanel.value) return
   await nextTick()
   const focused = document.activeElement
-  const lost = !focused || focused === document.body || (focused instanceof HTMLButtonElement && focused.disabled)
+  const lost =
+    !focused ||
+    !root.value?.contains(focused) ||
+    (focused instanceof HTMLButtonElement && focused.disabled)
   if (!lost) return
   if (form.state.value === 'scoring') confirmButton.value?.focus()
   else focusFirstPlayer()
@@ -208,12 +254,14 @@ const sessionLabel = computed(() => session.value?.name ?? '')
         label="HOME"
         :name="homeName"
         :rating="homeRating"
-        :focused="isPanel && highlightedSlot === 'home'"
+        :focused="(isPanel || filterOpen) && highlightedSlot === 'home'"
+        :compact="phoneFiltering"
         @clear="form.clearSlot('home')"
       />
-      <div class="flex w-11 flex-none flex-col items-center gap-1">
+      <div v-if="!phoneFiltering" class="flex w-11 flex-none flex-col items-center gap-1">
         <span class="text-xs text-text-faint">vs</span>
         <button
+          v-if="!filterOpen"
           type="button"
           class="flex h-8.5 w-8.5 items-center justify-center rounded-full border border-border-default bg-bg-raised text-sm text-text-secondary"
           aria-label="Swap sides"
@@ -226,25 +274,43 @@ const sessionLabel = computed(() => session.value?.name ?? '')
         label="AWAY"
         :name="awayName"
         :rating="awayRating"
-        :focused="isPanel && highlightedSlot === 'away'"
+        :focused="(isPanel || filterOpen) && highlightedSlot === 'away'"
+        :compact="phoneFiltering"
         @clear="form.clearSlot('away')"
       />
     </div>
 
+    <PlayerFilter
+      v-if="filterOpen"
+      :players="orderedPlayers"
+      :selected-ids="selectedIds"
+      :info-by-id="infoByPlayerId"
+      :initial-query="filterInitial"
+      :panel="isPanel"
+      @pick="pickFromFilter"
+      @close="closeFilter"
+    />
     <PlayerGrid
-      v-if="!playersPending"
-      :players="players ?? []"
+      v-else-if="!playersPending"
+      :players="orderedPlayers"
       :selected-ids="selectedIds"
       :columns="isPanel ? 4 : 5"
-      :label="isPanel ? 'All players · recent first' : 'Recently played'"
+      :hint="isPanel ? 'type to filter' : null"
       @select="form.selectPlayer($event)"
+      @show-all="openFilter()"
     />
 
-    <template v-if="form.state.value !== 'selecting'">
+    <!-- Always on screen so nothing jumps when the second player lands, dimmed and inert until
+         both slots are filled (4b/4c). -->
+    <div
+      v-if="!phoneFiltering"
+      class="mt-3 transition-opacity duration-150 motion-reduce:transition-none"
+      :class="form.state.value === 'selecting' ? 'pointer-events-none opacity-35' : ''"
+      :inert="form.state.value === 'selecting'"
+    >
       <ScoreStepper
         :home-score="form.homeScore.value"
         :away-score="form.awayScore.value"
-        class="mt-3"
         @increment-home="form.incrementScore('home')"
         @decrement-home="form.decrementScore('home')"
         @increment-away="form.incrementScore('away')"
@@ -252,7 +318,9 @@ const sessionLabel = computed(() => session.value?.name ?? '')
         @set-home="form.setScore('home', $event)"
         @set-away="form.setScore('away', $event)"
       />
+    </div>
 
+    <template v-if="form.state.value !== 'selecting'">
       <PreviewLine class="mt-3" :outcome="form.lastOutcome.value" :pending="form.preview.isPending.value" />
 
       <button
@@ -269,6 +337,7 @@ const sessionLabel = computed(() => session.value?.name ?? '')
          never jumps and the goal is visible from the first tap. mt-auto keeps it at the bottom
          when the form is shorter than its container. -->
     <footer
+      v-if="!phoneFiltering"
       class="sticky bottom-0 mt-auto flex flex-col gap-3 border-t border-border-hairline px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
       :class="isPanel ? 'bg-bg-drawer' : 'bg-bg-canvas'"
     >

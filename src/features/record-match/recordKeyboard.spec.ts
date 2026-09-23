@@ -26,14 +26,15 @@ function setup(state: FormState, names = ['Ras', 'Dennis', 'Dave', 'Rico']) {
     decrementScore: vi.fn(),
     submit: vi.fn(async () => {}),
   }
+  const openFilter = vi.fn()
   const press = (key: string, target: HTMLElement = root, init: KeyboardEventInit = {}) => {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
     Object.defineProperty(event, 'target', { value: target })
-    handleRecordKeydown(event, { form, root })
+    handleRecordKeydown(event, { form, root, openFilter })
     return event
   }
   const focusedName = () => document.activeElement?.getAttribute('aria-label')
-  return { root, form, press, input, focusedName }
+  return { root, form, press, input, focusedName, openFilter }
 }
 
 describe('handleRecordKeydown', () => {
@@ -41,16 +42,16 @@ describe('handleRecordKeydown', () => {
     document.body.innerHTML = ''
   })
 
-  it('typing an initial focuses the next matching player, cycling through repeats', () => {
-    const { press, focusedName } = setup('selecting')
-    press('r')
-    expect(focusedName()).toBe('Select Ras')
-    press('R')
-    expect(focusedName()).toBe('Select Rico')
-    press('r')
-    expect(focusedName()).toBe('Select Ras')
-    press('d')
-    expect(focusedName()).toBe('Select Dennis')
+  it('typing a letter while selecting opens the name filter with it; not while scoring', () => {
+    const { press, openFilter } = setup('selecting')
+    const event = press('R')
+    expect(openFilter).toHaveBeenCalledWith('R')
+    expect(event.defaultPrevented).toBe(true)
+    document.body.innerHTML = ''
+
+    const scoring = setup('scoring')
+    scoring.press('d')
+    expect(scoring.openFilter).not.toHaveBeenCalled()
   })
 
   it('↑/↓ walk the players while selecting, and change the active score while scoring', () => {
@@ -83,13 +84,13 @@ describe('handleRecordKeydown', () => {
   })
 
   it('leaves Esc to the drawer; typing in a field and modifier combos are left alone', () => {
-    const { press, input, focusedName } = setup('selecting')
+    const { press, input, openFilter } = setup('selecting')
     const event = press('Escape')
     expect(event.defaultPrevented).toBe(false)
 
     press('r', input)
     press('r', undefined, { metaKey: true })
-    expect(focusedName()).not.toBe('Select Ras')
+    expect(openFilter).not.toHaveBeenCalled()
   })
 
   it('ignores keys outside selecting/scoring (the result overlay handles its own)', () => {

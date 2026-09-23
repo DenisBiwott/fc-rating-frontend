@@ -53,7 +53,7 @@ and `useElementWidth()` (ResizeObserver), which the leaderboard uses to pick its
 from the table's own width (`features/leaderboard/columns.ts`). The phone/tablet leaderboard
 list goes a step further with a CSS container query: `LeaderboardList` is an `@container`, and
 its rows switch to the tablet layout at 640px of *container* width (`@min-[640px]:`). That lets
-the same list sit in the narrow column beside the desktop Record panel (516px at 1024) as the
+the same list sit in the narrow column beside the desktop LATEST column (516px at 1024) as the
 compact phone rows, while phones and tablets behave exactly as with `sm:`.
 `AccountBar` and `DesktopRail` share their logic through `useAccount()`, so sign-in, log out and
 the theme toggle can't drift apart between the two.
@@ -108,9 +108,9 @@ non-negotiable for when Pinia would be a legitimate addition.
 The one piece of *feature* client state is the record-match form, in a single composable,
 `useRecordMatchForm`, not scattered across component refs. Its desktop companion,
 `useRecordLauncher`, decides *where* the form opens. On phones and tablets that's the `/record`
-route (`?home=` pre-fills Home). On desktop it's the leaderboard's docked panel, or a right-side
-`RecordDrawer` on any other screen. The router guard sends `/record` on a desktop window to the
-panel. It holds only the drawer's open flag, a queued Home pre-fill, and a focus request.
+route (`?home=` pre-fills Home). On desktop it's `RecordDrawer`, on every page (4b replaced 3a's
+docked panel). The router guard sends `/record` on a desktop window to the leaderboard with the
+drawer open. It holds only the drawer's open flag, a queued Home pre-fill, and a focus request.
 `RecordMatchForm` is the single form component for both homes (variant `screen` or `panel`). The
 panel variant resets itself on Done, since it outlives a single match. When a match is recorded,
 the form hands its outcome and rank changes to `useRecentMoves` (`features/leaderboard/`), which

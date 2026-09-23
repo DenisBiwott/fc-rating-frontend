@@ -65,16 +65,18 @@ const cards = computed(() => matches.value ?? [])
       enter-from-class="-translate-y-2 opacity-0"
       move-class="transition-transform duration-300 ease-out motion-reduce:transition-none"
     >
+      <!-- The just-recorded wash is an overlay that fades by opacity. Transitioning the card's own
+           colours instead also animated every theme toggle, flashing the old theme's colours. -->
       <li
         v-for="match in cards"
         :key="match.id"
-        class="flex flex-col gap-2 rounded-[14px] border px-4 py-3.5 transition-colors duration-700"
-        :class="
-          highlightedMatch === match.id
-            ? 'border-[rgba(52,211,153,0.3)] bg-[rgba(52,211,153,0.07)]'
-            : 'border-border-default bg-bg-raised'
-        "
+        class="relative isolate flex flex-col gap-2 rounded-[14px] border border-border-default bg-bg-raised px-4 py-3.5"
       >
+        <span
+          aria-hidden="true"
+          class="pointer-events-none absolute -inset-px -z-10 rounded-[inherit] border border-[rgba(52,211,153,0.3)] bg-[rgba(52,211,153,0.07)] transition-opacity duration-700 motion-reduce:transition-none"
+          :class="highlightedMatch === match.id ? 'opacity-100' : 'opacity-0'"
+        />
         <div class="flex items-center justify-between gap-2">
           <span class="truncate font-mono text-[11px] text-text-muted">{{ when(match) }}</span>
           <span
