@@ -3,15 +3,14 @@
 // both BottomNav and AccountBar there. Top to bottom: FC mark · Record (52px green, radius 16) ·
 // divider · Table · Players · spacer · account controls · TV. Active item gets a bg/control fill.
 // This component owns its breakpoint (hidden below lg), mirroring BottomNav's lg:hidden.
-//
-// Not here yet, by slice: the `R` key hint under Record waits for keyboard shortcuts (a hint with
-// no working key would mislead), and TV is inert until the /tv route exists (deferred: CLAUDE.md Scope boundaries).
+// TV opens /tv browser-fullscreen: the click is the user gesture a fullscreen request needs.
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import KeyHint from '@/components/KeyHint.vue'
 import NavIcon from '@/components/NavIcon.vue'
 import { useAccount } from '@/composables/useAccount'
 import { useRecordLauncher } from '@/features/record-match/useRecordLauncher'
+import { enterTvFullscreen } from '@/features/tv/useTvScreen'
 
 const { user, isPending, isAdmin, nextTheme, toggleTheme, logOut } = useAccount()
 const route = useRoute()
@@ -21,7 +20,8 @@ const { openRecord } = useRecordLauncher()
 const tableActive = computed(() => route.name === 'leaderboard')
 const playersActive = computed(() => route.name === 'players' || route.name === 'player-profile')
 
-const itemClass = 'flex w-16 flex-col items-center gap-[5px] rounded-xl py-2.5 text-[10px] font-semibold'
+const itemClass =
+  'flex w-16 flex-col items-center gap-[5px] rounded-xl py-2.5 text-[10px] font-semibold'
 const accountClass =
   'flex h-11 w-16 items-center justify-center rounded-xl font-mono text-[10px] font-semibold tracking-[0.04em] text-text-secondary hover:bg-bg-control'
 </script>
@@ -48,7 +48,9 @@ const accountClass =
       >
         +
       </span>
-      <span class="text-[10px] font-bold tracking-[0.06em] text-text-up-bright" aria-hidden="true">RECORD</span>
+      <span class="text-[10px] font-bold tracking-[0.06em] text-text-up-bright" aria-hidden="true"
+        >RECORD</span
+      >
       <KeyHint v-if="isAdmin">R</KeyHint>
     </component>
 
@@ -56,7 +58,12 @@ const accountClass =
 
     <RouterLink
       to="/"
-      :class="[itemClass, tableActive ? 'bg-bg-control text-text-primary' : 'text-text-nav-inactive hover:bg-bg-control']"
+      :class="[
+        itemClass,
+        tableActive
+          ? 'bg-bg-control text-text-primary'
+          : 'text-text-nav-inactive hover:bg-bg-control',
+      ]"
       :aria-current="tableActive ? 'page' : undefined"
     >
       <NavIcon name="table" />
@@ -65,7 +72,12 @@ const accountClass =
 
     <RouterLink
       to="/players"
-      :class="[itemClass, playersActive ? 'bg-bg-control text-text-primary' : 'text-text-nav-inactive hover:bg-bg-control']"
+      :class="[
+        itemClass,
+        playersActive
+          ? 'bg-bg-control text-text-primary'
+          : 'text-text-nav-inactive hover:bg-bg-control',
+      ]"
       :aria-current="playersActive ? 'page' : undefined"
     >
       <NavIcon name="players" />
@@ -75,10 +87,15 @@ const accountClass =
     <div class="flex-1" />
 
     <div v-if="!isPending" class="flex flex-col items-center gap-1">
-      <button type="button" :class="accountClass" :aria-label="`Switch to ${nextTheme} theme`" @click="toggleTheme">
+      <button
+        type="button"
+        :class="accountClass"
+        :aria-label="`Switch to ${nextTheme} theme`"
+        @click="toggleTheme"
+      >
         {{ nextTheme === 'light' ? 'Light' : 'Dark' }}
       </button>
-      <RouterLink v-if="!isAdmin" :to="{ name: 'login' }" :class="accountClass">Log in</RouterLink>
+      <RouterLink v-if="!isAdmin" :to="{ name: 'login' }" :class="accountClass">Login</RouterLink>
       <button
         v-else
         type="button"
@@ -86,17 +103,17 @@ const accountClass =
         :title="user ? `Signed in as ${user.name}` : undefined"
         @click="logOut"
       >
-        Log out
+        Logout
       </button>
     </div>
 
-    <span
-      :class="[itemClass, 'cursor-not-allowed text-text-nav-inactive opacity-40']"
-      aria-disabled="true"
-      title="TV mode — coming soon"
+    <RouterLink
+      to="/tv"
+      :class="[itemClass, 'text-text-nav-inactive hover:bg-bg-control']"
+      @click="enterTvFullscreen"
     >
       <NavIcon name="tv" />
       TV
-    </span>
+    </RouterLink>
   </nav>
 </template>

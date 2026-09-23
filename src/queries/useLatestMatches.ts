@@ -30,12 +30,26 @@ export interface LatestMatch {
  * usePlayerMatches.ts.
  */
 async function fetchLatestMatches(): Promise<LatestMatch[]> {
-  const [{ data: matchList }, players, sessions] = await Promise.all([
+  const [{ data: matchList }, cachedPlayers, cachedSessions] = await Promise.all([
     apiClient.GET('/matches', { params: { query: { limit: LATEST_COUNT } } }),
     queryClient.ensureQueryData(playersQueryOptions),
     queryClient.ensureQueryData(sessionsQueryOptions),
   ])
+  let players = cachedPlayers
+  let sessions = cachedSessions
   if (!matchList) throw new Error('GET /matches returned no data')
+
+  // ensureQueryData returns whatever is cached, however old. A player or session created on
+  // another device since then (TV mode runs all evening) would show as a raw id, so refetch a list
+  // once when a match references something it doesn't have.
+  const known = new Set(players.map((p) => p.id))
+  if (matchList.items.some((m) => !known.has(m.homePlayerId) || !known.has(m.awayPlayerId))) {
+    players = await queryClient.fetchQuery(playersQueryOptions)
+  }
+  const knownSessions = new Set(sessions.map((s) => s.id))
+  if (matchList.items.some((m) => m.sessionId && !knownSessions.has(m.sessionId))) {
+    sessions = await queryClient.fetchQuery(sessionsQueryOptions)
+  }
 
   const nameById = new Map(players.map((p) => [p.id, p.name]))
   const sessionById = new Map(sessions.map((s) => [s.id, s.name]))
