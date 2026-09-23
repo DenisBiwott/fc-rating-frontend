@@ -185,14 +185,18 @@ and is refetched after each recorded match. Decision (Denis): All appears only w
 outnumber the tiles, per the spec (the 4b mock shows it with 8 players, which would fit).
 Build order otherwise lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The product design and
-pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — a
-planning document, not committed here). This repo's docs
-distill the sections that govern it; if the two ever disagree, treat that as a bug in this repo's
-docs, not a decision to quietly follow one side.
+pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — Denis's
+own file, not committed here, replaced wholesale each time he exports new designs from the Claude
+Design canvas, so it holds no history or annotations of its own).
+[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) is this repo's durable record of what was actually
+built and every deliberate deviation from that file (see its own "Known deviations" section) —
+this repo never edits `../DESIGN-SPEC.md` itself; read it for current pixel values, but treat
+`docs/DESIGN_SYSTEM.md` as authoritative for anything it already documents.
 
-Known contract gap: the real `openapi.json` has no `/api/v1` prefix (design doc and the backend's
-own `docs/API.md` both claim one) and `GET /leaderboard` doesn't return `player`/
-`deltaSinceLastSession` the way the design doc wants — `src/queries`' leaderboard hook composes
+Known contract gap: the real `openapi.json` has no `/api/v1` prefix (the backend's own
+`docs/API.md` claims one, and so did the retired platform-design doc) and `GET /leaderboard`
+doesn't return `player`/`deltaSinceLastSession` the way that retired doc specified —
+`src/queries`' leaderboard hook composes
 `/leaderboard` + `/players` + a session's `playerDeltas` client-side as a documented placeholder.
 Both are backend-owned fixes long-term, not frontend workarounds to keep.
 
@@ -329,8 +333,9 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
 
 Deliberately deferred — flag rather than silently building toward these: player head-to-head
 comparison, what-if rating-config UI (backend API can already support it), seasons, 2v2 matches,
-offline-first / PWA sync queue. See design doc §13 for the intended order if one becomes real
-work.
+offline-first / PWA sync queue. (The original platform-design doc had an intended order for
+these; it's retired now, so there's no source left to point to — raise it fresh with Denis if one
+becomes real work.)
 
 **Future improvement: TV mode (Turn 3's 3e, the planned Slice 10, deferred by Denis 2026-09-23).**
 Designed in `../DESIGN-SPEC.md` §6 "TV mode" and the canvas's 3e. The plan when it's picked up:
@@ -350,7 +355,9 @@ Until then the rail's TV item stays inert ("TV mode — coming soon").
   screen or user flow, a change to the visual language, a new/changed env var, a contract sync
   that changes how a feature consumes the API, or a scar-worthy fix. **Always propose before
   editing a doc**: state which doc(s), quote the lines, show the replacement, and wait for a
-  go-ahead — never edit a doc as a silent side effect of a code change.
+  go-ahead — never edit a doc as a silent side effect of a code change. This applies to this
+  repo's own docs only — `../DESIGN-SPEC.md` is Denis's, lives outside this repo, and is never
+  edited here; a deviation from it is proposed and written into `docs/DESIGN_SYSTEM.md` instead.
 - Each topic has exactly one owning doc; update the owner rather than restating the fact
   elsewhere.
 - Components stay small; logic lives in composables. No `any`; `defineProps` uses type-only

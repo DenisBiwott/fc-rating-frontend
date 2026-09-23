@@ -30,7 +30,7 @@ unreachable) base URL, since apiClient's real baseUrl is `''` by design and Node
 page origin to resolve a relative one against the way a browser does.
 
 E2E (Playwright, post-MVP): the 10-second record-match flow on a mobile viewport. Not part of MVP
-scope — see design doc §10.
+scope yet.
 
 ## CI quality gates
 

@@ -1,8 +1,14 @@
 # Design system
 
-Distilled from `../DESIGN-SPEC.md` (pixel-level spec, outside this repo). That file governs visual
-implementation in full detail; this page is the summary to keep in-repo. If they disagree, treat
-`../DESIGN-SPEC.md` as more current and flag the drift here.
+Distilled from `../DESIGN-SPEC.md`, one directory up, outside this repo. **That file is Denis's**:
+he replaces it wholesale, along with the canvas export it's built from, every time he adds new
+designs — so it holds no history and no annotations. A note added there is gone the next time he
+pastes an update (confirmed 2026-09-23, when a Turn 4 paste silently reverted several documented
+deviations, including this exact sentence). **This page is the durable record instead**: read
+`../DESIGN-SPEC.md` for current pixel values and any screen it covers that isn't documented below,
+but treat this page as authoritative for anything it already documents, and never edit
+`../DESIGN-SPEC.md` itself — a deviation from it, once decided, is written here and only here. See
+"Known deviations" below for the running list.
 
 Target device: 390 × 844, dark default, Vue 3 + Tailwind + shadcn-vue.
 
@@ -20,7 +26,8 @@ Text: `#fafafa` (primary) → `#a1a1aa` (secondary) → `#71717a` (muted) → `#
 accents only**: `accent/up` (green, `oklch(0.78 0.19 148)`) for positive delta / confirm / record;
 `accent/down` (coral, `oklch(0.72 0.17 25)`) for negative delta. Gold/silver/bronze apply to ranks
 1–3 only, never as a general accent. Adding a third hue (blue for info, amber for warning) is a
-spec change, not a styling detail — don't add one without updating `../DESIGN-SPEC.md` first.
+spec change, not a styling detail — flag it and get a decision before adding one; it's never a
+silent addition.
 
 No gradients as decoration except the live-session banner. No glow except under the two green CTAs
 and the Record FAB.
@@ -224,7 +231,38 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
   picked, so the nav's green FAB never competes with it and it's never below the fold.
 
 Full component specs (exact padding, every state, canonical markup) are in `../DESIGN-SPEC.md`
-§2 and §6 — copy the values from there, not from memory.
+§2 and §6 — copy the values from there, not from memory, except where "Known deviations" just
+below says otherwise.
+
+## Known deviations from DESIGN-SPEC.md
+
+DESIGN-SPEC.md is replaced wholesale on every export, so it has no way to track its own history —
+these are things it currently says that this repo deliberately doesn't build, or builds
+differently, because the decision was made and is recorded here rather than there. Detail on each
+lives with the matching component above; this is the index, kept short on purpose so it stays easy
+to scan and doesn't drift out of sync with the prose it points to.
+
+- **Nav icons exist.** DESIGN-SPEC.md §5 still says "no emoji, no icon-decoration"; Denis dropped
+  that rule 2026-09-23 for Turn 3, and `NavIcon`/`BottomNav`/`DesktopRail` (Navigation, above) use
+  outlined glyphs throughout.
+- **No Undo.** DESIGN-SPEC.md §6 currently describes a 10s-countdown Undo replacing Done (3b) and,
+  in the Turn 4 revisions, that same button moving to a toast instead. Denis dropped Undo entirely
+  2026-09-23; neither form is built, and the drawer's secondary action stays gone rather than
+  becoming Done or Undo (ResultOverlay, above).
+- **No AddPlayer "Starting rating" override.** DESIGN-SPEC.md §2/§6 still lists a `config default ·
+  1200` + Override row. Ratings are derived by replaying matches, so there's no per-player starting
+  value to set (Add player, above).
+- **Unrated-only sort-last, not "provisional & unrated."** DESIGN-SPEC.md §6 says "provisional &
+  unrated sort last"; this repo follows the backend's actual rule instead, since the spec's wording
+  would print ranks out of order (Desktop leaderboard table, above).
+- **Destructive button text isn't the spec's ink colour.** DESIGN-SPEC.md's VoidMatchDialog entry
+  specifies `#1a0805` text on the coral fill, mirroring `accent-up-ink` on the green CTAs. The
+  Delete-player and Void-match confirm buttons (`accent-down-solid` fill) currently use plain
+  `text-white` instead — there's no `accent-down-ink` token yet. Not yet reconciled; flag before
+  fixing, since it'd mean adding that token.
+- **The retired `fc-rating-platform-design.md`.** DESIGN-SPEC.md's own intro line still calls
+  itself a "companion" to that file. It was retired 2026-09-23 (this repo's docs are canonical for
+  anything it used to cover); that's a stale reference in Denis's file, not something fixed here.
 
 ## Motion
 
