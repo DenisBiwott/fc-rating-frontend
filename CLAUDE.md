@@ -167,16 +167,36 @@ new (the profile's desktop menu has it too); there was no way to undo a deactiva
 shadcn-vue's `Popover` was added. The MSW mock now handles player create/update/delete and
 `?active=`.
 **Slice 10 (TV mode, 3e) deferred, 2026-09-23** — see Scope boundaries for the plan.
+**Turn 4 started 2026-09-23 (canvas 4a–4d, DESIGN-SPEC.md §6 "Turn 4 revisions"), as Slices 11–12.**
+**Slice 11 (LATEST + Record drawer everywhere, 4a/4b) done, 2026-09-23.** The leaderboard's docked
+Record panel is gone. Its right column is now `LatestMatches` (last 5 matches, all sessions, for
+everyone; `useLatestMatches` reads each item's `outcome`), and recording happens in
+`RecordDrawer` on every desktop page, including the leaderboard. The drawer's result has no
+buttons: it closes itself after ~1.5s, then the table tints and the new LATEST card's wash start.
+Recording or voiding a match now also refetches `['matches']`. Decisions (Denis): LATEST cards
+follow the spec text (per-name deltas, `time · session`) over the simpler mock; Record another is
+gone from the drawer; the Undo toast is not built.
+**Slice 12 (2-row picker + name filter, 4b–4d) done, 2026-09-23.** `PlayerGrid` shows two rows
+("tonight, then recent", `playerPicker.ts`) with an "All +N" tile when players outnumber the
+tiles. `PlayerFilter` replaces the grid (All tile, or any letter in the drawer) and lists matching
+active players. The score stepper is always shown, dimmed until both slots are filled.
+`useRecentlyPlayedPlayers` now orders by `GET /players`' `lastPlayedAt`, not a 100-match scan,
+and is refetched after each recorded match. Decision (Denis): All appears only when players
+outnumber the tiles, per the spec (the 4b mock shows it with 8 players, which would fit).
 Build order otherwise lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The product design and
-pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — a
-planning document, not committed here). This repo's docs
-distill the sections that govern it; if the two ever disagree, treat that as a bug in this repo's
-docs, not a decision to quietly follow one side.
+pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — Denis's
+own file, not committed here, replaced wholesale each time he exports new designs from the Claude
+Design canvas, so it holds no history or annotations of its own).
+[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) is this repo's durable record of what was actually
+built and every deliberate deviation from that file (see its own "Known deviations" section) —
+this repo never edits `../DESIGN-SPEC.md` itself; read it for current pixel values, but treat
+`docs/DESIGN_SYSTEM.md` as authoritative for anything it already documents.
 
-Known contract gap: the real `openapi.json` has no `/api/v1` prefix (design doc and the backend's
-own `docs/API.md` both claim one) and `GET /leaderboard` doesn't return `player`/
-`deltaSinceLastSession` the way the design doc wants — `src/queries`' leaderboard hook composes
+Known contract gap: the real `openapi.json` has no `/api/v1` prefix (the backend's own
+`docs/API.md` claims one, and so did the retired platform-design doc) and `GET /leaderboard`
+doesn't return `player`/`deltaSinceLastSession` the way that retired doc specified —
+`src/queries`' leaderboard hook composes
 `/leaderboard` + `/players` + a session's `playerDeltas` client-side as a documented placeholder.
 Both are backend-owned fixes long-term, not frontend workarounds to keep.
 
@@ -197,13 +217,15 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   **Decided 2026-09-23 (Turn 3):** a second, small piece of client state, `useRecordLauncher`
   (`src/features/record-match/`), holds where the record form opens on desktop: drawer open, a
   queued Home pre-fill, and a focus request. It's module-level so the router guard, the rail, a
-  profile and the panel share it. A composable, still no Pinia. Likewise `useRecentMoves`
-  (`src/features/leaderboard/`): which two rows to tint for 4s after a recorded match.
+  profile and LATEST share it. A composable, still no Pinia. Likewise `useRecentMoves`
+  (`src/features/leaderboard/`): which two rows, and which LATEST card, to highlight for 4s after
+  a recorded match.
 - **The record-match flow is one scrolling card** — no wizard, no modal, no login inside it. Tap
-  Home/Away slots to fill from a recently-played grid, two score steppers, a debounced (150ms)
+  Home/Away slots to fill from a two-row "tonight, then recent" grid (or its name filter), two
+  score steppers, a debounced (150ms)
   preview line, a full-width Confirm using a client-generated UUID v7 reused verbatim on retry
   (idempotent against the backend). One component, `RecordMatchForm`, serves both places it lives:
-  the full-screen `/record` route (phones/tablets) and the desktop docked panel/drawer.
+  the full-screen `/record` route (phones/tablets) and the desktop Record drawer.
 - **Two accent hues, full stop**: green for positive, coral for negative, plus gold/silver/bronze
   for ranks 1–3 only. Ratings are the largest text on the leaderboard — nothing competes with
   them. All ratings/scores/deltas/records are tabular mono
@@ -291,6 +313,14 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
   mode. Fixed by moving every mode-dependent colour onto tokens (docs/DESIGN_SYSTEM.md#theming).
   The lesson: a surface and the text on it must both be tokens, or both be fixed. Never mix.
 
+- **A colour transition on a token-coloured surface animates every theme toggle.** LATEST's cards
+  had `transition-colors duration-700` so the just-recorded green wash would fade out. Toggling
+  the theme swaps the tokens underneath, so the same transition faded each card from the old
+  theme's colours to the new ones: a visible flash of the opposite theme (Denis spotted it). Fixed
+  by putting the wash on its own overlay that fades by *opacity*, with a mode-independent alpha
+  tint, so the card's own colours switch instantly. Don't transition colours on anything whose
+  colours come from theme tokens; fade an overlay instead.
+
 - **An MSW `*/…` wildcard also matches the app's own source files.** The browser Service Worker sees
   every request the page makes, including Vite's module URLs. A new `*/players/:id` handler matched
   `/src/features/players/PlayerProfileView.vue` and answered the route's lazy import with a "player
@@ -303,8 +333,9 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
 
 Deliberately deferred — flag rather than silently building toward these: player head-to-head
 comparison, what-if rating-config UI (backend API can already support it), seasons, 2v2 matches,
-offline-first / PWA sync queue. See design doc §13 for the intended order if one becomes real
-work.
+offline-first / PWA sync queue. (The original platform-design doc had an intended order for
+these; it's retired now, so there's no source left to point to — raise it fresh with Denis if one
+becomes real work.)
 
 **Future improvement: TV mode (Turn 3's 3e, the planned Slice 10, deferred by Denis 2026-09-23).**
 Designed in `../DESIGN-SPEC.md` §6 "TV mode" and the canvas's 3e. The plan when it's picked up:
@@ -324,7 +355,9 @@ Until then the rail's TV item stays inert ("TV mode — coming soon").
   screen or user flow, a change to the visual language, a new/changed env var, a contract sync
   that changes how a feature consumes the API, or a scar-worthy fix. **Always propose before
   editing a doc**: state which doc(s), quote the lines, show the replacement, and wait for a
-  go-ahead — never edit a doc as a silent side effect of a code change.
+  go-ahead — never edit a doc as a silent side effect of a code change. This applies to this
+  repo's own docs only — `../DESIGN-SPEC.md` is Denis's, lives outside this repo, and is never
+  edited here; a deviation from it is proposed and written into `docs/DESIGN_SYSTEM.md` instead.
 - Each topic has exactly one owning doc; update the owner rather than restating the fact
   elsewhere.
 - Components stay small; logic lives in composables. No `any`; `defineProps` uses type-only
