@@ -148,7 +148,7 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
               : winPct > 50
                 ? 'text-text-up'
                 : winPct < 50
-                  ? 'text-accent-down'
+                  ? 'text-text-down'
                   : 'text-text-muted'
           "
         />
@@ -159,7 +159,7 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
             profile.streak?.result === 'W'
               ? 'text-text-up-bright'
               : profile.streak?.result === 'L'
-                ? 'text-accent-down'
+                ? 'text-text-down'
                 : 'text-text-primary'
           "
           :sub-label="profile.bestStreak ? `best ${profile.bestStreak.length} ${profile.bestStreak.result}` : 'no streak yet'"
@@ -168,7 +168,7 @@ const goalDiff = computed(() => (profile.value ? profile.value.goalsFor - profil
           label="GOALS"
           :value="`${profile.goalsFor}:${profile.goalsAgainst}`"
           :sub-label="goalDiff === 0 ? 'even' : `${goalDiff > 0 ? '+' : ''}${goalDiff} diff`"
-          :sub-label-class="goalDiff > 0 ? 'text-text-up' : goalDiff < 0 ? 'text-accent-down' : 'text-text-muted'"
+          :sub-label-class="goalDiff > 0 ? 'text-text-up' : goalDiff < 0 ? 'text-text-down' : 'text-text-muted'"
         />
       </div>
 

@@ -16,7 +16,7 @@ const rounded = computed(() => (props.value === null ? null : Math.round(props.v
 <template>
   <span
     class="font-mono font-semibold"
-    :class="!rounded ? 'text-text-faint' : rounded > 0 ? 'text-text-up' : 'text-accent-down'"
+    :class="!rounded ? 'text-text-faint' : rounded > 0 ? 'text-text-up' : 'text-text-down'"
   >
     <template v-if="!rounded">—</template>
     <template v-else-if="rounded > 0">+{{ rounded }}</template>

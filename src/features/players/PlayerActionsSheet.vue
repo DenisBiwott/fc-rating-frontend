@@ -98,14 +98,14 @@ async function confirmDelete(): Promise<void> {
             :disabled="gamesPlayed > 0"
             @click="mode = 'confirm-delete'"
           >
-            <span class="text-base font-semibold text-accent-down">Delete player</span>
+            <span class="text-base font-semibold text-text-down">Delete player</span>
             <span class="text-[11px] text-text-muted">Only while they have no matches</span>
           </button>
         </div>
 
         <span
           v-if="updatePlayer.isError.value"
-          class="text-xs text-accent-down"
+          class="text-xs text-text-down"
         >
           Could not update player.
         </span>
@@ -129,7 +129,7 @@ async function confirmDelete(): Promise<void> {
           />
           <span
             v-if="updatePlayer.isError.value && updatePlayer.error.value"
-            class="text-xs text-accent-down"
+            class="text-xs text-text-down"
           >
             Could not rename player — the name may already be taken.
           </span>
@@ -149,12 +149,12 @@ async function confirmDelete(): Promise<void> {
 
       <div v-else class="flex flex-col gap-4">
         <div>
-          <span class="font-mono text-[10px] tracking-[0.16em] font-semibold text-accent-down">DELETE PLAYER</span>
+          <span class="font-mono text-[10px] tracking-[0.16em] font-semibold text-text-down">DELETE PLAYER</span>
           <p class="mt-1.5 text-lg font-bold text-text-primary">Delete {{ name }}? This can't be undone.</p>
         </div>
         <span
           v-if="deletePlayer.isError.value && deletePlayer.error.value instanceof DeletePlayerError"
-          class="text-xs text-accent-down"
+          class="text-xs text-text-down"
         >
           {{ deletePlayer.error.value.message }}
         </span>

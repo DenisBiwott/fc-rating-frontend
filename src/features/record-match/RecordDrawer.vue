@@ -29,7 +29,7 @@ function keepFormFocus(event: Event): void {
         <VisuallyHidden as-child>
           <DialogTitle>Record match</DialogTitle>
         </VisuallyHidden>
-        <RecordMatchForm variant="panel" @done="drawerOpen = false" />
+        <RecordMatchForm variant="panel" in-drawer @done="drawerOpen = false" />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>

@@ -39,7 +39,7 @@ async function confirmVoid(): Promise<void> {
   <Sheet v-model:open="open">
     <SheetContent title="Void match">
       <div>
-        <span class="font-mono text-[10px] font-semibold tracking-[0.16em] text-accent-down">VOID MATCH</span>
+        <span class="font-mono text-[10px] font-semibold tracking-[0.16em] text-text-down">VOID MATCH</span>
         <p class="mt-1.5 text-lg font-bold text-text-primary">Remove {{ scoreLabel }} vs {{ opponentName }}?</p>
       </div>
 
@@ -53,7 +53,7 @@ async function confirmVoid(): Promise<void> {
             {{ Math.round(player.ratingBefore) }} &rarr;
             <span
               class="font-semibold"
-              :class="player.ratingAfter >= player.ratingBefore ? 'text-text-up-bright' : 'text-accent-down'"
+              :class="player.ratingAfter >= player.ratingBefore ? 'text-text-up-bright' : 'text-text-down'"
             >
               {{ Math.round(player.ratingAfter) }}
             </span>
@@ -61,7 +61,7 @@ async function confirmVoid(): Promise<void> {
         </div>
       </div>
 
-      <span v-if="voidMatch.isError.value" class="text-xs text-accent-down">Could not void this match.</span>
+      <span v-if="voidMatch.isError.value" class="text-xs text-text-down">Could not void this match.</span>
 
       <div class="flex flex-col gap-2.5">
         <button

@@ -7,13 +7,15 @@
 //     highlighted. The form outlives a match here, so Done resets it and emits `done`.
 // Both: one scrolling card, no wizard, no login, Confirm pinned in a footer so it's always on
 // screen and the only green button in view.
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import KeyHint from '@/components/KeyHint.vue'
 import { useCurrentSession } from '@/queries/useCurrentSession'
 import { useLeaderboard } from '@/queries/useLeaderboard'
 import { useRecentlyPlayedPlayers } from '@/queries/useRecentlyPlayedPlayers'
 import MatchSlot from './MatchSlot.vue'
 import PlayerGrid from './PlayerGrid.vue'
 import PreviewLine from './PreviewLine.vue'
+import { handleRecordKeydown } from './recordKeyboard'
 import ResultOverlay from './ResultOverlay.vue'
 import ScoreStepper from './ScoreStepper.vue'
 import { flashRecordedMatch } from '@/features/leaderboard/useRecentMoves'
@@ -21,8 +23,13 @@ import { useRecordLauncher } from './useRecordLauncher'
 import { useRecordMatchForm } from './useRecordMatchForm'
 
 const props = withDefaults(
-  defineProps<{ variant?: 'screen' | 'panel'; initialHomePlayerId?: string | null }>(),
-  { variant: 'screen', initialHomePlayerId: null },
+  defineProps<{
+    variant?: 'screen' | 'panel'
+    initialHomePlayerId?: string | null
+    /** The panel shown as a drawer: Esc closes the drawer rather than clearing the form. */
+    inDrawer?: boolean
+  }>(),
+  { variant: 'screen', initialHomePlayerId: null, inDrawer: false },
 )
 const emit = defineEmits<{ exit: []; done: [] }>()
 
@@ -51,9 +58,10 @@ const awayRating = computed(() => (form.awayPlayerId.value ? (ratingByPlayerId.v
 const selectedIds = computed(() =>
   [form.homePlayerId.value, form.awayPlayerId.value].filter((id): id is string => id !== null),
 )
-// The slot the next grid pick fills — highlighted in the panel (3a's "Home slot focused").
-const nextSlot = computed<'home' | 'away' | null>(() =>
-  form.state.value !== 'selecting' ? null : form.homePlayerId.value === null ? 'home' : 'away',
+// The active slot — the one a pick fills, and whose score ↑/↓ adjusts — highlighted in the panel
+// (3a's "Home slot focused"), while selecting and scoring.
+const highlightedSlot = computed(() =>
+  form.state.value === 'selecting' || form.state.value === 'scoring' ? form.activeSide.value : null,
 )
 
 const canCancel = computed(() => form.state.value === 'selecting' || form.state.value === 'scoring')
@@ -76,6 +84,26 @@ function applyLauncherRequest(): void {
   // empty slot is a disabled button and can't take focus.
   root.value?.querySelector<HTMLElement>('button[aria-label^="Select "]:not([disabled])')?.focus()
 }
+
+// Desktop keyboard (recordKeyboard.ts). Panel only; a phone has no keyboard to speak of.
+function onKeydown(event: KeyboardEvent): void {
+  if (!isPanel.value || !root.value) return
+  handleRecordKeydown(event, { form, root: root.value, escapeClears: !props.inDrawer })
+}
+
+// A picked tile becomes disabled, and a disabled element drops focus to <body>: keyboard input
+// would then leave the panel. Keep focus in it: on the next pickable player while selecting, on
+// Confirm once both players are in (so ↵ confirms and ↑/↓ still reach the panel).
+const confirmButton = ref<HTMLButtonElement | null>(null)
+watch(selectedIds, async () => {
+  if (!isPanel.value) return
+  await nextTick()
+  const focused = document.activeElement
+  const lost = !focused || focused === document.body || (focused instanceof HTMLButtonElement && focused.disabled)
+  if (!lost) return
+  if (form.state.value === 'scoring') confirmButton.value?.focus()
+  else root.value?.querySelector<HTMLElement>('button[aria-label^="Select "]:not([disabled])')?.focus()
+})
 
 onMounted(() => {
   if (props.initialHomePlayerId) prefillHome(props.initialHomePlayerId)
@@ -112,8 +140,11 @@ watch(
        panel/drawer wrapper), or it would scroll away with the form. -->
   <section
     ref="root"
-    class="flex h-full flex-none flex-col overflow-y-auto *:shrink-0"
+    data-record-form
+    tabindex="-1"
+    class="flex h-full flex-none flex-col overflow-y-auto *:shrink-0 focus:outline-none"
     :class="isPanel ? 'bg-bg-panel px-1 pt-6' : ''"
+    @keydown="onKeydown"
   >
     <header v-if="isPanel" class="flex items-center justify-between gap-3 px-5 pb-4">
       <h2 class="text-lg font-bold text-text-primary">Record match</h2>
@@ -147,7 +178,7 @@ watch(
         label="HOME"
         :name="homeName"
         :rating="homeRating"
-        :focused="isPanel && nextSlot === 'home'"
+        :focused="isPanel && highlightedSlot === 'home'"
         @clear="form.clearSlot('home')"
       />
       <div class="flex w-11 flex-none flex-col items-center gap-1">
@@ -165,7 +196,7 @@ watch(
         label="AWAY"
         :name="awayName"
         :rating="awayRating"
-        :focused="isPanel && nextSlot === 'away'"
+        :focused="isPanel && highlightedSlot === 'away'"
         @clear="form.clearSlot('away')"
       />
     </div>
@@ -211,18 +242,24 @@ watch(
       class="sticky bottom-0 mt-auto flex flex-col gap-3 border-t border-border-hairline px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
       :class="isPanel ? 'bg-bg-panel' : 'bg-bg-canvas'"
     >
-      <p v-if="form.submitError.value" role="alert" class="text-sm text-accent-down">
+      <p v-if="form.submitError.value" role="alert" class="text-sm text-text-down">
         {{ form.submitError.value }} —
         <button type="button" class="underline" @click="form.submit()">Retry</button>
       </p>
       <button
+        ref="confirmButton"
         type="button"
-        class="h-14 rounded-2xl bg-accent-up text-[17px] font-bold text-accent-up-ink shadow-[0_12px_30px_-12px_rgba(52,211,153,0.6)] disabled:opacity-50 disabled:shadow-none"
+        class="flex h-14 items-center justify-center gap-2.5 rounded-2xl bg-accent-up text-[17px] font-bold text-accent-up-ink shadow-[0_12px_30px_-12px_rgba(52,211,153,0.6)] disabled:opacity-50 disabled:shadow-none"
         :disabled="!form.isValid.value || form.state.value === 'submitting'"
+        :aria-keyshortcuts="isPanel ? 'Enter' : undefined"
         @click="form.submit()"
       >
         {{ form.state.value === 'submitting' ? 'Recording…' : 'Confirm result' }}
+        <KeyHint v-if="isPanel" on-green>↵</KeyHint>
       </button>
+      <p v-if="isPanel" class="text-center font-mono text-[10px] text-text-faint">
+        ← → side · ↑ ↓ score · ↵ confirm · esc {{ inDrawer ? 'close' : 'clear' }}
+      </p>
     </footer>
 
     <ResultOverlay

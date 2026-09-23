@@ -124,6 +124,10 @@ selecting → scoring → submitting → result → done
 ```
 
 - **selecting** — home/away slots empty or partially filled from the recently-played grid.
+- **Active side** (not a state, a companion ref): `activeSide` is the slot a pick fills while
+  selecting and the score ↑/↓ adjusts while scoring. It follows the first empty slot, so tapping
+  tiles fills Home then Away as always. The desktop keyboard (`recordKeyboard.ts`, ← →) and
+  clearing a slot move it.
 - **scoring** — both slots filled; score steppers active; preview line fetches
   `POST /matches/preview` on every score change, debounced 150ms. "Cancelled the moment submission
   starts" means the *pending debounce timer* is cleared — an in-flight preview request already

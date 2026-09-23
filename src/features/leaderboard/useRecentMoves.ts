@@ -58,5 +58,5 @@ export function rankMoveLabel(highlight: RowHighlight | undefined): { text: stri
   if (!highlight || highlight.rankMove === 0) return null
   return highlight.rankMove > 0
     ? { text: `▲${highlight.rankMove}`, class: 'text-text-up' }
-    : { text: `▼${-highlight.rankMove}`, class: 'text-accent-down' }
+    : { text: `▼${-highlight.rankMove}`, class: 'text-text-down' }
 }

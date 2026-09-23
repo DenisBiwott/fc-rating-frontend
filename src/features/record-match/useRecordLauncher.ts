@@ -8,7 +8,7 @@
 // This is client state beyond the record form itself (CLAUDE.md's state-management rule): whether
 // the drawer is open, a queued Home player, and a focus request. It's module-level so the router
 // guard, the rail, a profile and the panel all share it. Small enough not to need Pinia.
-import { readonly, ref } from 'vue'
+import { onBeforeUnmount, onMounted, readonly, ref, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 
@@ -51,4 +51,27 @@ export function useRecordLauncher() {
     openRecord,
     takePendingHome,
   }
+}
+
+/**
+ * The global `R` shortcut (DESIGN-SPEC.md §6 "Keyboard"): open or focus Record. Ignored while
+ * typing, inside any dialog, and inside the record form itself, where letters pick players
+ * (including R for Ras). Call once, from a component that's always mounted (App.vue).
+ */
+export function useRecordShortcut(enabled: Ref<boolean>): void {
+  const { openRecord } = useRecordLauncher()
+
+  function onKeydown(event: KeyboardEvent): void {
+    if (!enabled.value || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return
+    if (event.key.toLowerCase() !== 'r') return
+    const focused = document.activeElement
+    if (focused?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [data-record-form]')) {
+      return
+    }
+    event.preventDefault()
+    openRecord()
+  }
+
+  onMounted(() => document.addEventListener('keydown', onKeydown))
+  onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 }

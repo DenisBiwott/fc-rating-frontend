@@ -148,6 +148,11 @@ redirects to the panel, carrying `?home=`. The phone/tablet list now switches la
 leaderboard tints its two players' rows green/coral with ▲n/▼n for 4s (`useRecentMoves`), while
 the rows FLIP and the ratings tick. **Undo was dropped (Denis, 2026-09-23)**: not built, and the
 secondary action stays Done.
+**Coral text + Slice 7 (desktop keyboard) done, 2026-09-23.** Coral text uses `text-down`
+(light mode `oklch(0.52 0.17 25)`, ≥4.6:1), like green. Keyboard: global `R` opens/focuses
+Record, and inside the panel ← → switch the active slot (new `activeSide` in the form), letters and
+↑ ↓ pick players, ↑ ↓ set scores, ↵ confirms, Esc clears; `R` on the result is Record another.
+A whole match was recorded by keyboard alone in Chrome (docs/DESIGN_SYSTEM.md#core-components).
 Build order otherwise lives in
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). The product design and
 pixel-level visual spec live in `../DESIGN-SPEC.md` (one directory up, outside this repo — a
@@ -194,8 +199,8 @@ Both are backend-owned fixes long-term, not frontend workarounds to keep.
 - **Every colour works in both themes.** Dark is the default, light is opt-in via the toggle in
   `AccountBar` / `DesktopRail`. Components use theme tokens only, never a hard-coded neutral hex/rgb. A mode-dependent
   colour gets a token defined in both `:root` and `.dark` in `src/styles/main.css`. Only the
-  accents, medals and alpha tints are mode-independent, except that green *text* uses `text-up*`
-  (darker in light mode for contrast), never `text-accent-up*`. A new or changed screen isn't done until
+  accents, medals and alpha tints are mode-independent, except that green and coral *text* use
+  `text-up*` / `text-down` (darker in light mode for contrast), never `text-accent-*`. A new or changed screen isn't done until
   it has been looked at in both themes. Full rules and the token table:
   [docs/DESIGN_SYSTEM.md#theming](docs/DESIGN_SYSTEM.md#theming).
 - Do **not** introduce: Vuex, Axios, hand-written API types, any UI kit besides shadcn-vue, or

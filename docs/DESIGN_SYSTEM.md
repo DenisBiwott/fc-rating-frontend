@@ -49,7 +49,10 @@ uses `var(--color-…)`. There are two kinds of token:
   `accent-up` (dark) and `accent-up-bright` (dark), and `oklch(0.5 0.15 148)` in light mode.
   Measured in light mode, the accent as text was 1.3–1.8:1 against WCAG's 4.5:1 for small text.
   The darker green clears 4.5:1 on every light surface it sits on, including the green form chip.
-  Never use `text-accent-up*` for text.
+  Never use `text-accent-up*` for text. **Coral text, the same way:** `text-down` is `accent-down`
+  in dark mode and `oklch(0.52 0.17 25)` in light (measured 2.1:1 before, 4.6:1 or better after,
+  worst case the coral L chip). Never use `text-accent-down` for text. Lines and fills (the
+  sparkline stroke, destructive buttons, washes) keep the accents.
 - **Mode-independent**: the two accents, the medals, `accent-up-ink`, and the alpha tints
   (green/coral washes, borders and chips, CTA shadows). An alpha tint works on either canvas
   because it's transparent over whatever surface is behind it, so these can be written as
@@ -72,6 +75,7 @@ Special-purpose neutrals:
 | `preview-bar-home` / `-away` | `#4a5568` / `#2f3947` | `#8795a8` / `#c3cad4` | PreviewLine split bar (neutral, not accent) |
 | `bg-result` | `#08110c` | `#eef6f0` | result canvas, the one tinted canvas (green-cast black / off-white) |
 | `text-result-meta` / `-faint` | `#8b9a91` / `#6b7c72` | `#4f6157` / `#5f7167` | result caption / match-of-session label |
+| `text-down` | `oklch(0.72 0.17 25)` | `oklch(0.52 0.17 25)` | coral text: negative deltas, `L` letters, errors, destructive labels, `▼n` |
 | `text-up` / `text-up-bright` | `oklch(0.78 0.19 148)` / `oklch(0.82 0.17 148)` | `oklch(0.5 0.15 148)` (both) | green text: positive deltas, `W` letters, RECORD label, streaks |
 | `border-result-secondary`, `text-result-secondary` | `#2e3a34`, `#d4d4d8` | `#c3d3c9`, `#27272a` | result screen's secondary button |
 
@@ -146,6 +150,15 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
   fill gets a green border and a `0 0 0 3px rgba(52,211,153,0.14)` ring. The picker is every
   active player in 4 columns, most recent first. Confirm is pinned at the bottom, and the result
   overlay covers only the panel. "Record with {name}" on a profile opens it with Home filled.
+- **Keyboard (desktop)** — the global `R` (outside the Record panel, admins) opens or focuses it
+  (`useRecordShortcut`). Inside the panel (`recordKeyboard.ts`): `← →` switch the active slot
+  (shown by the green ring, in scoring too); a letter focuses the next player with that initial,
+  `↑ ↓` walk the players, and `↵` picks one; while scoring `↑ ↓` change the active score and `↵`
+  confirms; `Esc` clears (or closes the drawer). On the panel's result, `R` is Record another.
+  Picking keeps focus in the panel (next player, then Confirm). `KeyHint` chips: mono 10px, 1px
+  `border-control` border, or `rgba(4,22,13,0.35)` on green; they sit on the rail's Record, the
+  panel's Confirm (`↵`) and Record another (`R`), plus a hint line under Confirm. Buttons carry
+  `aria-keyshortcuts`.
 - **Sheets / dialogs** — `SheetContent` is a bottom sheet on phones and a centred dialog (440px,
   fade plus a 4px rise) from `sm` up. Initial focus goes to the first focusable element unless the
   sheet handles `@open-auto-focus` (Add player focuses Name, per spec).

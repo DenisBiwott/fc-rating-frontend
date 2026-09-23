@@ -5,6 +5,7 @@
 // dismissing back to record another rather than losing the moment entirely.
 import { computed, onMounted, ref } from 'vue'
 import AvatarTile from '@/components/AvatarTile.vue'
+import KeyHint from '@/components/KeyHint.vue'
 import DeltaBadge from '@/components/DeltaBadge.vue'
 import RatingNumber from '@/components/RatingNumber.vue'
 
@@ -77,6 +78,11 @@ const playedTime = computed(() =>
 
 function handleKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') emit('recordAnother')
+  // Desktop panel (3b): R records another, as its key hint says.
+  else if (isPanel.value && event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    event.preventDefault()
+    emit('recordAnother')
+  }
 }
 </script>
 
@@ -158,10 +164,12 @@ function handleKeydown(event: KeyboardEvent): void {
     <div class="mt-auto flex w-full flex-col" :class="isPanel ? 'gap-2.5' : 'max-w-xs gap-3'">
       <button
         type="button"
-        class="h-14 rounded-2xl bg-accent-up text-[17px] font-bold text-accent-up-ink shadow-[0_12px_30px_-12px_rgba(52,211,153,0.6)]"
+        class="flex h-14 items-center justify-center gap-2.5 rounded-2xl bg-accent-up text-[17px] font-bold text-accent-up-ink shadow-[0_12px_30px_-12px_rgba(52,211,153,0.6)]"
+        :aria-keyshortcuts="isPanel ? 'R' : undefined"
         @click="emit('recordAnother')"
       >
         Record another
+        <KeyHint v-if="isPanel" on-green>R</KeyHint>
       </button>
       <button
         type="button"

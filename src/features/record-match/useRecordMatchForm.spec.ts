@@ -54,6 +54,25 @@ describe('useRecordMatchForm', () => {
     expect(form.awayPlayerId.value).toBe('dennis')
   })
 
+  it('fills the active slot: Away first after → , and clearing a slot makes it active', () => {
+    const form = mountForm()
+    form.setActiveSide('away')
+    form.selectPlayer('ras')
+    expect(form.awayPlayerId.value).toBe('ras')
+    expect(form.activeSide.value).toBe('home')
+
+    form.selectPlayer('dennis')
+    expect(form.homePlayerId.value).toBe('dennis')
+    expect(form.state.value).toBe('scoring')
+    // Scoring starts on Home, so ↑/↓ adjust the home score first.
+    expect(form.activeSide.value).toBe('home')
+
+    form.clearSlot('away')
+    expect(form.activeSide.value).toBe('away')
+    form.selectPlayer('jason')
+    expect(form.awayPlayerId.value).toBe('jason')
+  })
+
   it('clamps scores to the 0-20 range', () => {
     const form = mountForm()
     form.selectPlayer('ras')

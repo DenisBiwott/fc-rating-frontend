@@ -62,7 +62,7 @@ const tableColumns = computed(() => columnsForWidth(tableWidth.value))
           />
         </header>
         <div v-if="isPending" class="px-7 py-10 font-mono text-sm text-text-muted">Loading…</div>
-        <div v-else-if="isError" class="px-7 py-10 font-mono text-sm text-accent-down">
+        <div v-else-if="isError" class="px-7 py-10 font-mono text-sm text-text-down">
           Couldn't load the leaderboard.
         </div>
         <template v-else-if="data">
@@ -106,7 +106,7 @@ const tableColumns = computed(() => columnsForWidth(tableWidth.value))
       <div v-if="isPending" class="px-5 py-10 text-center font-mono text-sm text-text-muted">
         Loading…
       </div>
-      <div v-else-if="isError" class="px-5 py-10 text-center font-mono text-sm text-accent-down">
+      <div v-else-if="isError" class="px-5 py-10 text-center font-mono text-sm text-text-down">
         Couldn't load the leaderboard.
       </div>
       <LeaderboardList v-else-if="data" :rows="data.rows" :provisional-games="data.ratingConfig.provisionalGames" />

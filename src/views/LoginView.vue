@@ -36,7 +36,7 @@ async function handleSubmit(): Promise<void> {
       >
         {{ login.isPending.value ? 'Logging in…' : 'Log in' }}
       </button>
-      <p v-if="login.isError.value" class="text-sm text-accent-down" role="alert">
+      <p v-if="login.isError.value" class="text-sm text-text-down" role="alert">
         {{ login.error.value?.message }}
       </p>
     </form>

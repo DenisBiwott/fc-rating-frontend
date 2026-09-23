@@ -60,7 +60,7 @@ async function submit(): Promise<void> {
         <span class="text-xs text-text-faint">Must be unique. 2–24 characters.</span>
         <span
           v-if="createPlayer.isError.value && createPlayer.error.value instanceof CreatePlayerError"
-          class="text-xs text-accent-down"
+          class="text-xs text-text-down"
         >
           {{ createPlayer.error.value.message }}
         </span>

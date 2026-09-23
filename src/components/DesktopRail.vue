@@ -8,6 +8,7 @@
 // no working key would mislead), and TV is inert until the /tv route exists.
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import KeyHint from '@/components/KeyHint.vue'
 import NavIcon from '@/components/NavIcon.vue'
 import { useAccount } from '@/composables/useAccount'
 import { useRecordLauncher } from '@/features/record-match/useRecordLauncher'
@@ -36,6 +37,7 @@ const accountClass =
       :is="isAdmin ? 'button' : RouterLink"
       v-bind="isAdmin ? { type: 'button', onClick: () => openRecord() } : { to: '/record' }"
       aria-label="Record match"
+      :aria-keyshortcuts="isAdmin ? 'R' : undefined"
       class="flex flex-col items-center gap-1.5 rounded-2xl"
       :class="isAdmin ? '' : 'opacity-40'"
     >
@@ -47,6 +49,7 @@ const accountClass =
         +
       </span>
       <span class="text-[10px] font-bold tracking-[0.06em] text-text-up-bright" aria-hidden="true">RECORD</span>
+      <KeyHint v-if="isAdmin">R</KeyHint>
     </component>
 
     <span class="h-px w-10 bg-border-nav" aria-hidden="true" />

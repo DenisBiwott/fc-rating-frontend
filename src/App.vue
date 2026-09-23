@@ -12,6 +12,7 @@ import DesktopRail from '@/components/DesktopRail.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useTheme } from '@/composables/useTheme'
 import RecordDrawer from '@/features/record-match/RecordDrawer.vue'
+import { useRecordShortcut } from '@/features/record-match/useRecordLauncher'
 import { useIsAdmin } from '@/queries/useCurrentUser'
 
 // Must be called unconditionally from a component that's always instantiated. Previously relied
@@ -25,6 +26,7 @@ useTheme()
 const route = useRoute()
 const isDesktop = useIsDesktop()
 const isAdmin = useIsAdmin()
+useRecordShortcut(computed(() => isDesktop.value && isAdmin.value))
 // Neither chrome piece shows on /login or the 404 (`public`), nor on a `fullscreen` screen.
 const showNav = computed(() => !route.meta.public && !route.meta.fullscreen)
 
