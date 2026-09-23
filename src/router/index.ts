@@ -14,9 +14,9 @@ declare module 'vue-router' {
     fullscreen?: boolean
     /** The widest layout this screen has been designed for (Turn 3 lands one screen at a time).
      *  App.vue caps the content column to 600px from the next breakpoint up: `phone` (default)
-     *  caps from sm, `tablet` from lg; `desktop` only at the 1440px page cap. See
-     *  docs/ARCHITECTURE.md#responsive-shell. */
-    layout?: 'phone' | 'tablet' | 'desktop'
+     *  caps from sm, `tablet` from lg; `desktop` only at the 1440px page cap; `full` never (TV mode,
+     *  which scales its own stage to the whole screen). See docs/ARCHITECTURE.md#responsive-shell. */
+    layout?: 'phone' | 'tablet' | 'desktop' | 'full'
   }
 }
 
@@ -47,6 +47,13 @@ const router = createRouter({
       component: () => import('@/features/players/PlayerProfileView.vue'),
       props: true,
       meta: { layout: 'desktop' },
+    },
+    {
+      // TV mode (DESIGN-SPEC.md §6, 3e): public like the leaderboard, so a TV never has to log in.
+      path: '/tv',
+      name: 'tv',
+      component: () => import('@/features/tv/TvView.vue'),
+      meta: { fullscreen: true, layout: 'full' },
     },
     {
       path: '/matches',

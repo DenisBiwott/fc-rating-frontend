@@ -13,6 +13,7 @@ import { useRecordLauncher } from '@/features/record-match/useRecordLauncher'
 import { formatPlayedAt } from '@/lib/played-at'
 import { useIsAdmin } from '@/queries/useCurrentUser'
 import { LATEST_COUNT, useLatestMatches, type LatestMatch } from '@/queries/useLatestMatches'
+import { latestNameClass as nameClass } from './latestCard'
 import { useHighlightedMatch } from './useRecentMoves'
 
 const { data: matches, isPending, isError } = useLatestMatches()
@@ -28,13 +29,6 @@ function when(match: LatestMatch): string {
       ? 'just now'
       : formatPlayedAt(match.playedAt, new Date(now.value))
   return match.sessionName ? `${time} · ${match.sessionName}` : time
-}
-
-function nameClass(match: LatestMatch, side: 'home' | 'away'): string {
-  const self = match[side].score
-  const other = match[side === 'home' ? 'away' : 'home'].score
-  if (self === other) return 'font-semibold text-text-primary'
-  return self > other ? 'font-bold text-text-primary' : 'font-medium text-text-secondary'
 }
 
 const cards = computed(() => matches.value ?? [])

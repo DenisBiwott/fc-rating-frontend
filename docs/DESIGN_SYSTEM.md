@@ -148,7 +148,7 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
   focus to Confirm on close is specced but not built yet.
 - **Navigation** — `BottomNav` below `lg` (Table / Record FAB / Players; icon + 10px label, FAB
   with a `RECORD` label under it), `DesktopRail` at `lg` and up (88px: FC mark, 52px Record
-  button, Table, Players, account controls, TV — inert until TV mode is built, see CLAUDE.md Scope boundaries). `NavIcon` draws the outlined glyphs in
+  button, Table, Players, account controls, TV, which opens `/tv` browser-fullscreen). `NavIcon` draws the outlined glyphs in
   `currentColor`. The active item is `text-primary` (plus a `bg-control` fill on the rail), inactive
   is `text-nav-inactive`. Every focusable element gets the global `:focus-visible` ring: 2px
   `accent-up`, offset 2px (`main.css`).
@@ -175,6 +175,19 @@ columns, tabular figures, `white-space: nowrap` on anything sitting next to them
   600 on a draw. The just-recorded match slides in at the top with a green wash for 4s (an
   overlay that fades by opacity, see the theming Scar in CLAUDE.md). Admins get a ghost "Record
   match `R`" button at the bottom. It replaced 3a's docked Record panel.
+- **TV mode** (3e, `/tv`) — no chrome; a fixed 1440×810 stage (40/56px padding) scaled to fit
+  the screen, letterboxed on other shapes (`tvLayout.ts`). Header: live dot (only with an open
+  session), session name 30/700 (or "Leaderboard"), "N matches · last HH:MM" in 16px mono, and
+  an `esc to exit` chip; "Reconnecting…" appears beside it while checks fail, over the last good
+  standings. Standings: rated players only (unrated are hidden). Rows are 76px (rank 26, avatar
+  50, name 30, form chips 24, rating 48/700, delta 22); with more players than fit, rows and
+  everything in them shrink proportionally down to 52px, then the list ends with "+N more".
+  Provisional ratings are `text-secondary` and keep their PROV badge. Right column 400px:
+  `LATEST`, the last 3 matches as radius-18 cards (time or "just now", UPSET chip, names 24 with
+  the winner bold as in 4a, score 34 mono, then both deltas). Rows whose rating changed get the
+  3b wash and ▲n/▼n for 4s and FLIP; a new card gets LATEST's wash. `Esc`, or leaving browser
+  fullscreen, exits: back to the previous page, or the leaderboard if `/tv` was opened directly.
+  A screen Wake Lock keeps the display on.
 - **Record drawer** (4b, desktop, admins only) — `RecordDrawer` on every desktop page: 420px,
   `bg-drawer`, `border-default` left border, over the page's right column (inset to the 1352px
   content column on wider screens, so on the leaderboard it covers LATEST exactly). A
@@ -260,6 +273,11 @@ to scan and doesn't drift out of sync with the prose it points to.
   Delete-player and Void-match confirm buttons (`accent-down-solid` fill) currently use plain
   `text-white` instead — there's no `accent-down-ink` token yet. Not yet reconciled; flag before
   fixing, since it'd mean adding that token.
+- **TV keeps the PROV badge.** The 3e mock only dims a provisional rating; the badge stays so
+  colour isn't the only signal, as on every other leaderboard (TV mode, above).
+- **TV's header shows "N matches · last HH:MM", not the session's elapsed time.** 3e shows
+  `10 matches · 2h 24m`; this group runs one long-lived session, so elapsed time would read in
+  weeks (TV mode, above).
 - **The retired `fc-rating-platform-design.md`.** DESIGN-SPEC.md's own intro line still calls
   itself a "companion" to that file. It was retired 2026-09-23 (this repo's docs are canonical for
   anything it used to cover); that's a stale reference in Denis's file, not something fixed here.

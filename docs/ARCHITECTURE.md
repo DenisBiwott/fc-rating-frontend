@@ -68,7 +68,8 @@ players roster are `desktop` (the roster also caps itself at 1180px), while reco
 login and the 404 stay `phone`. No route uses `tablet` now; it stays available for the next screen
 that gets a tablet design before a desktop one. A form gains nothing
 from a wide column, so record-match may simply stay that way. Tablet gutters are 32px (`sm:px-8`)
-where phone gutters are 20px (`px-5`).
+where phone gutters are 20px (`px-5`). TV mode (`/tv`) is `full`, with no cap at all: it scales
+its own 1440×810 stage to the whole screen.
 
 `BottomNav` is absolutely positioned (`bottom-0`) inside the `relative` main column, which is a
 fixed-height, `overflow-hidden` box. `RouterView` is the only scrollable region, with bottom
@@ -76,8 +77,9 @@ padding (`pb-24`, dropped at `lg`) to clear the nav. That's what keeps the nav p
 scrolls. It also fixed a real bug: when the nav was a normal flex sibling after `RouterView`, a
 leaderboard taller than the viewport pushed it below the fold.
 
-Route meta decides which chrome renders. `public` (`/login`, the 404) and `fullscreen` (`/record`)
-both hide `AccountBar` and `BottomNav`. They mean different things: `public` marks a screen that
+Route meta decides which chrome renders. `public` (`/login`, the 404) and `fullscreen` (`/record`,
+`/tv`) both hide `AccountBar`, `BottomNav` and `DesktopRail`, and `fullscreen` also turns off the
+global `R` shortcut, which would otherwise open the Record drawer over the TV. They mean different things: `public` marks a screen that
 isn't part of the app proper, while `fullscreen` marks a real app screen that needs the whole
 viewport. The record screen is fullscreen so the nav's green Record FAB can't outshine its own
 Confirm button. Confirm sits in a `sticky bottom-0` footer inside the view root, which is the
@@ -115,7 +117,25 @@ drawer open. It holds only the drawer's open flag, a queued Home pre-fill, and a
 panel variant resets itself on Done, since it outlives a single match. When a match is recorded,
 the form hands its outcome and rank changes to `useRecentMoves` (`features/leaderboard/`), which
 the leaderboard rows read to tint the two players for 4s. That's module-level UI state that clears
-itself, separate from the optimistic cache update that moves the rows. `composables/useTheme.ts` is a second,
+itself, separate from the optimistic cache update that moves the rows.
+
+TV mode can't use `useRecentMoves`, because the match was recorded on another device. Instead it
+polls, and compares each result with the last (`features/tv/`):
+- **A cheap probe.** `useTvPolling` fetches `GET /leaderboard` alone (1 request), not the
+  standings' 4-request composite plus LATEST's `/matches`. Only when the probe's response changes
+  do those two refetch (`invalidateQueries`). A new match or a void always changes it; a rename or
+  a new player who hasn't played doesn't, and waits for the next real change.
+- **Slowing down in steps.** `refetchInterval` is a function of how long nothing has changed: 10s,
+  then 60s after 30 minutes, then 15 minutes after 2 hours (`POLL_STEPS`). Matches are 15–25
+  minutes apart, so play never reaches a slow step. Any change or input on the TV goes back to 10s
+  (checking at once if it had slowed). The 15-minute step lets Neon's compute suspend while a TV
+  sits forgotten.
+- **"Changed" means a new data reference**, not `dataUpdatedAt`, which moves on every successful
+  fetch whether or not anything changed. Structural sharing keeps the same reference for an
+  identical response. `useTvHighlights` uses the same fact: it compares consecutive standings
+  (`diffStandings`) and LATEST lists, and holds the resulting highlights in the component for 4s.
+
+`composables/useTheme.ts` is a second,
 smaller piece — presentation state (which CSS class is on `<html>`), not server data, sitting
 outside the record-match form and outside TanStack Query on purpose.
 

@@ -166,7 +166,15 @@ with the phone sheet. Row menus: Rename…, Deactivate/Reactivate, Delete player
 new (the profile's desktop menu has it too); there was no way to undo a deactivation before.
 shadcn-vue's `Popover` was added. The MSW mock now handles player create/update/delete and
 `?active=`.
-**Slice 10 (TV mode, 3e) deferred, 2026-09-23** — see Scope boundaries for the plan.
+**Slice 10 (TV mode, 3e) done, 2026-09-23.** `/tv` (`src/features/tv/`) is a fixed 1440×810 stage
+scaled to the screen: standings plus the last 3 results. A cheap probe (`GET /leaderboard` alone)
+checks every 10s, slowing to 60s after 30 quiet minutes and 15 minutes after 2 hours; any change or
+input goes back to 10s, and only a change refetches the standings and LATEST (`useTvPolling`).
+Comparing successive standings (`diffStandings`) drives the FLIP, tints and ▲/▼, since the match
+was recorded on another device. The rail's TV item also goes browser-fullscreen, and leaving
+fullscreen exits TV (the browser keeps Esc for itself there). Decisions (Denis): unrated players are
+hidden; rows shrink 76→52px, then "+N more"; the header shows "N matches · last HH:MM"; the PROV
+badge is kept. Also fixed: LATEST showed raw ids for players created on another device.
 **Turn 4 started 2026-09-23 (canvas 4a–4d, DESIGN-SPEC.md §6 "Turn 4 revisions"), as Slices 11–12.**
 **Slice 11 (LATEST + Record drawer everywhere, 4a/4b) done, 2026-09-23.** The leaderboard's docked
 Record panel is gone. Its right column is now `LatestMatches` (last 5 matches, all sessions, for
@@ -336,17 +344,6 @@ comparison, what-if rating-config UI (backend API can already support it), seaso
 offline-first / PWA sync queue. (The original platform-design doc had an intended order for
 these; it's retired now, so there's no source left to point to — raise it fresh with Denis if one
 becomes real work.)
-
-**Future improvement: TV mode (Turn 3's 3e, the planned Slice 10, deferred by Denis 2026-09-23).**
-Designed in `../DESIGN-SPEC.md` §6 "TV mode" and the canvas's 3e. The plan when it's picked up:
-- a `/tv` route with no chrome (a `fullscreen`-style meta), entered from the rail's TV item;
-- standings refetched every 10s (TanStack Query `refetchInterval`);
-- diff each poll against the previous one, so changed rows FLIP, tint and show ▲/▼ like the
-  desktop leaderboard (`useRecentMoves` holds the same idea for one recorded match);
-- a LATEST column of the last 3 results from `GET /matches`, using each item's `outcome` for
-  deltas and the UPSET badge;
-- `Esc` exits.
-Until then the rail's TV item stays inert ("TV mode — coming soon").
 
 ## Process rules
 

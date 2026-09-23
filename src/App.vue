@@ -26,7 +26,8 @@ useTheme()
 const route = useRoute()
 const isDesktop = useIsDesktop()
 const isAdmin = useIsAdmin()
-useRecordShortcut(computed(() => isDesktop.value && isAdmin.value))
+// Not on a fullscreen screen: on /tv, `R` would open the drawer over the TV.
+useRecordShortcut(computed(() => isDesktop.value && isAdmin.value && !route.meta.fullscreen))
 // Neither chrome piece shows on /login or the 404 (`public`), nor on a `fullscreen` screen.
 const showNav = computed(() => !route.meta.public && !route.meta.fullscreen)
 
@@ -35,6 +36,7 @@ const COLUMN_CAP = {
   tablet: 'lg:mx-auto lg:w-full lg:max-w-150',
   // DESIGN-SPEC.md §6: content caps at 1440 and centres. The rail (88px) sits outside the column.
   desktop: 'mx-auto w-full max-w-[1352px]',
+  full: '',
 } as const
 const columnCap = computed(() => COLUMN_CAP[route.meta.layout ?? 'phone'])
 </script>
