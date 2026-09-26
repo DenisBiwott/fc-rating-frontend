@@ -39,6 +39,10 @@ export interface LeaderboardData {
     startedAt: string
     biggestMover: { name: string; delta: number } | null
   } | null
+  /** Which table the rows are, as GET /leaderboard reports it: a session's own ladder (everyone
+   *  starts it at baseline), or null for all-time. Not the same thing as `currentSession` (the
+   *  open one) — with no session open, the backend shows the most recently closed session's table. */
+  session: { id: string; name: string } | null
 }
 
 /**
@@ -119,6 +123,7 @@ async function fetchLeaderboard(): Promise<LeaderboardData> {
     ratingConfig: board.ratingConfig,
     totalMatches,
     currentSession,
+    session: board.session,
   }
 }
 
@@ -154,22 +159,30 @@ export function applyRecordedMatchOptimistically(
     // The server stamps playedAt at record time, so "now" is what the refetch would say anyway.
     const playedAt = new Date().toISOString()
 
+    // A session table is that session's own ladder, but the record response carries ALL-TIME
+    // ratings and deltas: writing those in would show a row's all-time rating until the refetch.
+    // So on a session table only the counts move now, and the refetch brings the rating. With no
+    // session open, the table is a closed session's and this match joins no session at all.
+    const sessionTable = old.session !== null
+    if (sessionTable && old.currentSession === null) return { ...old, lastMatchAt: playedAt }
+
     const updateRow = (row: LeaderboardRow, side: RecordedSide): LeaderboardRow => {
       const result: MatchResult = side.actualScore === 1 ? 'W' : side.actualScore === 0.5 ? 'D' : 'L'
       const wins = row.wins + (result === 'W' ? 1 : 0)
+      const gamesPlayed = sessionTable ? row.gamesPlayed + 1 : side.after.gamesPlayed
       return {
         ...row,
-        rating: side.after.rating,
-        gamesPlayed: side.after.gamesPlayed,
+        rating: sessionTable ? row.rating : side.after.rating,
+        gamesPlayed,
         wins,
         // Same definition as the backend's leaderboard (src/app/leaderboard.ts), so the optimistic
         // value matches what the next refetch returns.
-        winPct: side.after.gamesPlayed === 0 ? 0 : wins / side.after.gamesPlayed,
+        winPct: gamesPlayed === 0 ? 0 : wins / gamesPlayed,
         losses: row.losses + (result === 'L' ? 1 : 0),
         draws: row.draws + (result === 'D' ? 1 : 0),
         form: [...row.form, result].slice(-5),
-        isProvisional: side.after.gamesPlayed < old.ratingConfig.provisionalGames,
-        deltaSinceLastSession: side.delta,
+        isProvisional: gamesPlayed < old.ratingConfig.provisionalGames,
+        deltaSinceLastSession: sessionTable ? row.deltaSinceLastSession : side.delta,
         lastPlayedAt: playedAt,
       }
     }

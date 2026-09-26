@@ -219,6 +219,9 @@ export function getLeaderboardResponse() {
     entries,
     meanRating,
     ratingConfig: { name: 'default-elo', provisionalGames: PROVISIONAL_GAMES },
+    // The real backend's default table is the open session's own ladder. This mock keeps a single
+    // ladder, but labels it the same way so the frontend takes the same (session-table) path.
+    session: { id: session.id, name: session.name },
   }
 }
 
