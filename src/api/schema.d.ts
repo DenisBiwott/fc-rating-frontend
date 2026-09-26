@@ -253,7 +253,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get the current leaderboard */
+        /** Get the leaderboard (latest session by default) */
         get: operations["getLeaderboard"];
         put?: never;
         post?: never;
@@ -312,7 +312,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Rename a session (requires recorder role) */
+        patch: operations["renameSession"];
         trace?: never;
     };
     "/sessions/{id}/close": {
@@ -1180,7 +1181,9 @@ export interface operations {
     };
     getLeaderboard: {
         parameters: {
-            query?: never;
+            query?: {
+                session?: "all-time" | string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1216,6 +1219,10 @@ export interface operations {
                             name: string;
                             provisionalGames: number;
                         };
+                        session: {
+                            id: string;
+                            name: string;
+                        } | null;
                     };
                 };
             };
@@ -1348,6 +1355,41 @@ export interface operations {
                             delta: number;
                         } | null;
                         upsetCount: number;
+                    };
+                };
+            };
+        };
+    };
+    renameSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        name: string;
+                        /** Format: date-time */
+                        startedAt: string;
+                        endedAt: string | null;
+                        createdBy: string;
                     };
                 };
             };
